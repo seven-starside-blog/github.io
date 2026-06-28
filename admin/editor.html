@@ -275,41 +275,6 @@
   #editor a { color: var(--accent); text-decoration: underline; }
   #editor img { max-width: 100%; border-radius: 6px; margin: 8px 0; }
 
-  /* === プレビュー === */
-  #preview-pane {
-    display: none;
-    padding: 20px 24px;
-    font-size: 15px;
-    line-height: 1.8;
-    color: var(--text);
-  }
-  #preview-pane h1 { font-size: 24px; font-weight: 700; margin: 0 0 20px; color: var(--text); }
-  #preview-pane h2 { font-size: 18px; margin: 20px 0 8px; border-bottom: 2px solid var(--red-200); padding-bottom: 4px; }
-  #preview-pane strong { color: var(--accent); }
-  #preview-pane blockquote { border-left: 3px solid var(--red-400); padding: 4px 12px; background: var(--red-50); color: var(--text-muted); border-radius: 0 4px 4px 0; }
-
-  .mode-tabs {
-    display: flex;
-    background: var(--gray-50);
-    border-bottom: 1px solid var(--border);
-    padding: 0 12px;
-    gap: 0;
-  }
-  .mode-tab {
-    padding: 8px 14px;
-    font-size: 12px;
-    color: var(--text-muted);
-    cursor: pointer;
-    border: none;
-    background: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    font-family: var(--font);
-    transition: color 0.15s;
-  }
-  .mode-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
-  .mode-tab:hover:not(.active) { color: var(--text); }
-
   .word-count {
     padding: 6px 16px;
     font-size: 11px;
@@ -574,7 +539,7 @@
 
 <!-- ヘッダー -->
 <header>
-  <a href="/admin/" class="logo">管理画面</a>
+  <a href="dashboard.html" class="logo">管理画面</a>
   <span class="sep">/</span>
   <span class="page-title" id="header-mode">新規記事</span>
   <div class="spacer"></div>
@@ -587,19 +552,56 @@
 
 <!-- モーダル：リンク挿入 -->
 <div class="modal-overlay" id="link-modal">
-  <div class="modal">
+  <div class="modal" style="width:400px;max-width:95vw;">
     <h3>リンクを挿入</h3>
+
+    <!-- 挿入タイプ選択 -->
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button class="link-type-btn active" onclick="setLinkType('card')" id="type-card"
+        style="flex:1;padding:7px;border:1.5px solid var(--accent);border-radius:7px;background:var(--red-50);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
+        🔗 カード形式
+      </button>
+      <button class="link-type-btn" onclick="setLinkType('inline')" id="type-inline"
+        style="flex:1;padding:7px;border:1.5px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">
+        📝 テキストリンク
+      </button>
+    </div>
+
     <div class="field">
+      <label>URL</label>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="link-url" placeholder="https://..." style="flex:1;">
+        <button onclick="fetchOgp()" id="ogp-fetch-btn"
+          style="padding:0 12px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background 0.15s;">
+          取得
+        </button>
+      </div>
+    </div>
+
+    <!-- OGPプレビュー -->
+    <div id="ogp-preview" style="display:none;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;background:var(--gray-50);">
+      <div style="display:flex;gap:0;">
+        <img id="ogp-image" src="" alt="" style="width:90px;height:72px;object-fit:cover;flex-shrink:0;display:none;">
+        <div style="padding:10px 12px;min-width:0;flex:1;">
+          <div id="ogp-title" style="font-size:13px;font-weight:600;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+          <div id="ogp-desc"  style="font-size:11px;color:var(--text-muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.5;"></div>
+          <div id="ogp-site"  style="font-size:11px;color:var(--accent);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+        </div>
+      </div>
+    </div>
+    <div id="ogp-loading" style="display:none;text-align:center;padding:12px;font-size:12px;color:var(--text-muted);">OGP情報を取得中...</div>
+    <div id="ogp-error"   style="display:none;font-size:12px;color:var(--red-600);margin-bottom:10px;padding:8px;background:var(--red-50);border-radius:6px;"></div>
+
+    <!-- テキストリンク用テキスト入力 -->
+    <div class="field" id="link-text-field" style="display:none;">
       <label>表示テキスト</label>
       <input type="text" id="link-text" placeholder="リンクテキスト">
     </div>
-    <div class="field">
-      <label>URL</label>
-      <input type="text" id="link-url" placeholder="https://...">
-    </div>
+
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeLinkModal()">キャンセル</button>
-      <button class="btn-insert" onclick="insertLink()">挿入</button>
+      <button class="btn-insert" onclick="insertLink()" id="btn-insert-link" disabled
+        style="opacity:0.5;transition:opacity 0.15s;">挿入</button>
     </div>
   </div>
 </div>
@@ -629,18 +631,12 @@
 
     <!-- エディター本体 -->
     <div class="card" style="overflow:visible">
-      <!-- モードタブ -->
-      <div class="mode-tabs">
-        <button class="mode-tab active" onclick="setMode('edit')">編集</button>
-        <button class="mode-tab" onclick="setMode('preview')">プレビュー</button>
-        <button class="mode-tab" onclick="setMode('split')">分割</button>
-      </div>
-
       <!-- ツールバー -->
       <div class="toolbar" id="editor-toolbar">
         <div class="toolbar-group">
-          <select class="tb-select" onchange="formatBlock(this.value); this.value=''" title="見出し">
-            <option value="">段落</option>
+          <select class="tb-select" id="block-select" onchange="applyBlockStyle(this.value); this.value=''" title="段落スタイル">
+            <option value="">-- スタイル --</option>
+            <option value="p">通常テキスト</option>
             <option value="h1">見出し1</option>
             <option value="h2">見出し2</option>
             <option value="h3">見出し3</option>
@@ -691,7 +687,6 @@
 
       <!-- コンテンツエリア（編集 + プレビュー） -->
       <div id="edit-area" contenteditable="true" id="editor" style="min-height:420px;padding:16px;outline:none;font-size:15px;line-height:1.8;color:var(--text);font-family:var(--font);" data-placeholder="本文を入力してください…"></div>
-      <div id="preview-pane"></div>
 
       <!-- 文字数 -->
       <div class="word-count">
@@ -778,17 +773,33 @@ let currentStatus = 'draft';
 let tags = [];
 let savedRange = null;
 let autoSaveTimer = null;
+let editingId = null;     // 編集中の記事ID（nullなら新規）
+let allArticles = [];     // 全記事キャッシュ
+let editingArticleSha = null; // GitHub API用SHA
 
 // === 初期化 ===
 document.addEventListener('DOMContentLoaded', () => {
-  // 今日の日付をデフォルト設定
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('pub-date').value = today;
+  // URLパラメータから編集対象IDを取得
+  const urlParams = new URLSearchParams(location.search);
+  editingId = urlParams.get('id') || null;
 
-  // バックアップチェック
-  const backup = localStorage.getItem('article_backup');
-  if (backup) {
-    document.getElementById('backup-bar').classList.add('visible');
+  if (editingId) {
+    document.getElementById('header-mode').textContent = '記事を編集';
+    document.title = '記事を編集 | 管理画面';
+    loadExistingArticle(editingId);
+  } else {
+    // 今日の日付をデフォルト設定
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('pub-date').value = today;
+    document.getElementById('header-mode').textContent = '新規記事';
+  }
+
+  // バックアップチェック（新規のみ）
+  if (!editingId) {
+    const backup = localStorage.getItem('article_backup');
+    if (backup) {
+      document.getElementById('backup-bar').classList.add('visible');
+    }
   }
 
   // セッションからユーザー情報を表示（auth-guard.jsで保証済み）
@@ -809,40 +820,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateWordCount();
 });
 
-// === 編集モード切替 ===
-let currentMode = 'edit';
-function setMode(mode) {
-  currentMode = mode;
-  const editArea = document.getElementById('edit-area');
-  const previewPane = document.getElementById('preview-pane');
-  const toolbar = document.getElementById('editor-toolbar');
-
-  document.querySelectorAll('.mode-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['edit','preview','split'][i] === mode);
-  });
-
-  if (mode === 'edit') {
-    editArea.style.display = 'block';
-    previewPane.style.display = 'none';
-    toolbar.style.display = 'flex';
-  } else if (mode === 'preview') {
-    editArea.style.display = 'none';
-    previewPane.style.display = 'block';
-    toolbar.style.display = 'none';
-    previewPane.innerHTML = '<h1 style="font-size:22px;font-weight:700;margin-bottom:16px;">' +
-      (document.getElementById('title-input').value || 'タイトルなし') + '</h1>' +
-      document.getElementById('edit-area').innerHTML;
-  } else {
-    editArea.style.display = 'block';
-    previewPane.style.display = 'block';
-    editArea.style.width = '50%';
-    previewPane.style.width = '50%';
-    previewPane.style.borderLeft = '1px solid var(--border)';
-    document.querySelector('.card-body.editor-wrap') && (document.querySelector('.card-body.editor-wrap').style.display = 'flex');
-    toolbar.style.display = 'flex';
-    previewPane.innerHTML = document.getElementById('edit-area').innerHTML;
-  }
-}
+// (プレビュー・分割モードは削除済み)
 
 // === ツールバーコマンド ===
 function execCmd(cmd) {
@@ -851,18 +829,63 @@ function execCmd(cmd) {
   updateWordCount();
 }
 
-function formatBlock(tag) {
+function applyBlockStyle(tag) {
   if (!tag) return;
-  document.getElementById('edit-area').focus();
+  const area = document.getElementById('edit-area');
+  area.focus();
+
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+
+  // カーソルのある最上位ブロック要素を探す
+  let node = sel.getRangeAt(0).commonAncestorContainer;
+  while (node && node.parentNode !== area) {
+    node = node.parentNode;
+  }
+  if (!node || node === area) {
+    // 選択なし→直接insertHTMLで新規段落追加
+    if (tag === 'pre') {
+      document.execCommand('insertHTML', false, '<pre><code>コードを入力</code></pre>');
+    } else {
+      document.execCommand('insertHTML', false, `<${tag}><br></${tag}>`);
+    }
+    updateWordCount();
+    return;
+  }
+
   if (tag === 'pre') {
-    const code = document.createElement('pre');
-    code.innerHTML = '<code>コードを入力</code>';
-    insertNodeAtCursor(code);
+    // preは既存ノードをラップ
+    const pre = document.createElement('pre');
+    const code = document.createElement('code');
+    code.textContent = node.innerText || node.textContent || 'コードを入力';
+    pre.appendChild(code);
+    // styleを一切付けない
+    node.replaceWith(pre);
+    // カーソルをcodeの末尾に
+    const r = document.createRange();
+    r.selectNodeContents(code);
+    r.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(r);
   } else {
-    document.execCommand('formatBlock', false, tag);
+    // 新しい要素に内容を移してstyle/class完全リセット
+    const newEl = document.createElement(tag);
+    // innerHTML（太字などインライン書式）をそのまま引き継ぐ
+    newEl.innerHTML = node.innerHTML || '';
+    // style・classは一切引き継がない
+    node.replaceWith(newEl);
+    // カーソルを末尾に
+    const r = document.createRange();
+    r.selectNodeContents(newEl);
+    r.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(r);
   }
   updateWordCount();
 }
+
+// 後方互換（古い呼び出し元が残っている場合用）
+function formatBlock(tag) { applyBlockStyle(tag); }
 
 function insertNodeAtCursor(node) {
   const sel = window.getSelection();
@@ -881,38 +904,152 @@ function insertHr() {
 }
 
 // === リンクモーダル ===
+let linkType = 'card'; // 'card' | 'inline'
+let ogpData  = null;
+
+function setLinkType(type) {
+  linkType = type;
+  document.getElementById('type-card').style.cssText   = type === 'card'
+    ? 'flex:1;padding:7px;border:1.5px solid var(--accent);border-radius:7px;background:var(--red-50);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;'
+    : 'flex:1;padding:7px;border:1.5px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;';
+  document.getElementById('type-inline').style.cssText = type === 'inline'
+    ? 'flex:1;padding:7px;border:1.5px solid var(--accent);border-radius:7px;background:var(--red-50);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;'
+    : 'flex:1;padding:7px;border:1.5px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;';
+  document.getElementById('link-text-field').style.display = type === 'inline' ? 'block' : 'none';
+}
+
 function openLinkModal() {
   savedRange = window.getSelection().rangeCount > 0 ? window.getSelection().getRangeAt(0).cloneRange() : null;
   const sel = window.getSelection();
-  if (sel && sel.toString()) {
-    document.getElementById('link-text').value = sel.toString();
-  }
+  if (sel && sel.toString()) document.getElementById('link-text').value = sel.toString();
+  ogpData = null;
+  document.getElementById('link-url').value = '';
+  document.getElementById('link-text').value = '';
+  document.getElementById('ogp-preview').style.display = 'none';
+  document.getElementById('ogp-error').style.display   = 'none';
+  document.getElementById('ogp-loading').style.display = 'none';
+  document.getElementById('btn-insert-link').disabled  = true;
+  document.getElementById('btn-insert-link').style.opacity = '0.5';
+  setLinkType('card');
   document.getElementById('link-modal').classList.add('open');
   document.getElementById('link-url').focus();
 }
 
 function closeLinkModal() {
   document.getElementById('link-modal').classList.remove('open');
-  document.getElementById('link-text').value = '';
-  document.getElementById('link-url').value = '';
+}
+
+// OGP取得（allorigins.win プロキシ経由でCORSを回避）
+async function fetchOgp() {
+  const url = document.getElementById('link-url').value.trim();
+  if (!url || !url.startsWith('http')) {
+    showOgpError('有効なURLを入力してください（https://... から始まるURL）');
+    return;
+  }
+  document.getElementById('ogp-preview').style.display = 'none';
+  document.getElementById('ogp-error').style.display   = 'none';
+  document.getElementById('ogp-loading').style.display = 'block';
+  document.getElementById('ogp-fetch-btn').disabled    = true;
+  document.getElementById('btn-insert-link').disabled  = true;
+  document.getElementById('btn-insert-link').style.opacity = '0.5';
+  ogpData = null;
+
+  try {
+    const proxyUrl = `https://allorigins.win/get?disableCache=true&url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('fetch failed');
+    const json = await res.json();
+    const html = json.contents || '';
+
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const getMeta = (prop) =>
+      doc.querySelector(`meta[property="${prop}"]`)?.content ||
+      doc.querySelector(`meta[name="${prop}"]`)?.content || '';
+
+    ogpData = {
+      url,
+      title: getMeta('og:title') || doc.title || url,
+      desc:  getMeta('og:description') || getMeta('description') || '',
+      image: getMeta('og:image') || '',
+      site:  getMeta('og:site_name') || new URL(url).hostname,
+    };
+
+    // プレビュー表示
+    document.getElementById('ogp-title').textContent = ogpData.title;
+    document.getElementById('ogp-desc').textContent  = ogpData.desc;
+    document.getElementById('ogp-site').textContent  = ogpData.site;
+    const img = document.getElementById('ogp-image');
+    if (ogpData.image) {
+      img.src = ogpData.image;
+      img.style.display = 'block';
+      img.onerror = () => { img.style.display = 'none'; };
+    } else {
+      img.style.display = 'none';
+    }
+    document.getElementById('ogp-preview').style.display = 'block';
+    document.getElementById('ogp-loading').style.display = 'none';
+    document.getElementById('btn-insert-link').disabled  = false;
+    document.getElementById('btn-insert-link').style.opacity = '1';
+
+  } catch(e) {
+    document.getElementById('ogp-loading').style.display = 'none';
+    showOgpError('OGP情報の取得に失敗しました。URLを確認するか、テキストリンクで挿入してください。');
+    // 取得失敗でもURLは有効なので挿入は許可
+    document.getElementById('btn-insert-link').disabled  = false;
+    document.getElementById('btn-insert-link').style.opacity = '1';
+  }
+  document.getElementById('ogp-fetch-btn').disabled = false;
+}
+
+function showOgpError(msg) {
+  const el = document.getElementById('ogp-error');
+  el.textContent = msg;
+  el.style.display = 'block';
 }
 
 function insertLink() {
-  const text = document.getElementById('link-text').value || document.getElementById('link-url').value;
-  const url = document.getElementById('link-url').value;
+  const url = document.getElementById('link-url').value.trim();
   if (!url) { closeLinkModal(); return; }
+
   document.getElementById('edit-area').focus();
   if (savedRange) {
     const sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(savedRange);
   }
-  document.execCommand('insertHTML', false, `<a href="${url}" target="_blank">${text}</a>`);
+
+  let html = '';
+
+  if (linkType === 'card') {
+    // OGPカード形式
+    const title = ogpData?.title || url;
+    const desc  = ogpData?.desc  || '';
+    const site  = ogpData?.site  || new URL(url.startsWith('http') ? url : 'https://x').hostname;
+    const image = ogpData?.image || '';
+    html = `<a href="${url}" target="_blank" rel="noopener noreferrer"
+  class="ogp-card"
+  style="display:flex;gap:0;border:1px solid var(--border,#e8e8e8);border-radius:10px;overflow:hidden;text-decoration:none;color:inherit;background:var(--gray-50,#fafafa);margin:12px 0;max-width:100%;"
+  contenteditable="false">
+  ${image ? `<img src="${image}" alt="" style="width:120px;min-height:80px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">` : ''}
+  <div style="padding:12px 14px;min-width:0;flex:1;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#1a1a1a;">${title}</div>
+    ${desc ? `<div style="font-size:12px;color:#666;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.5;margin-bottom:4px;">${desc}</div>` : ''}
+    <div style="font-size:11px;color:#cc2222;">${site}</div>
+  </div>
+</a><p></p>`;
+  } else {
+    // テキストリンク形式
+    const text = document.getElementById('link-text').value.trim() || url;
+    html = `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color:var(--accent,#cc2222);text-decoration:underline;">${text}</a>`;
+  }
+
+  document.execCommand('insertHTML', false, html);
   closeLinkModal();
   updateWordCount();
 }
 
-document.getElementById('link-url').addEventListener('keydown', e => { if (e.key === 'Enter') insertLink(); });
+document.getElementById('link-url').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); fetchOgp(); } });
 
 // === 画像挿入 ===
 function insertImage() {
@@ -1055,34 +1192,126 @@ function restoreBackup() {
   }
 }
 
+// === 既存記事の読み込み ===
+async function loadExistingArticle(id) {
+  document.getElementById('save-indicator').textContent = '読み込み中...';
+  document.getElementById('save-indicator').className = 'save-indicator saving';
+  try {
+    const base = typeof BLOG_CONFIG !== 'undefined' ? `/${BLOG_CONFIG.GITHUB_REPO}` : '';
+    const res = await fetch(`${base}/data/articles.json?_=${Date.now()}`);
+    const json = await res.json();
+    allArticles = json.articles || [];
+    const article = allArticles.find(a => a.id === id);
+    if (!article) {
+      showToast('記事が見つかりませんでした');
+      document.getElementById('save-indicator').textContent = '読み込み失敗';
+      return;
+    }
+    // フォームに値をセット
+    document.getElementById('title-input').value  = article.title   || '';
+    document.getElementById('edit-area').innerHTML = article.content || '';
+    document.getElementById('pub-date').value      = article.date    || '';
+    document.getElementById('excerpt').value       = article.excerpt || '';
+    tags = article.tags || [];
+    renderTags();
+    setStatus(article.status || 'draft');
+    updateWordCount();
+    // アイキャッチ
+    if (article.thumbnail) {
+      const preview = document.getElementById('thumbnail-preview');
+      preview.src = article.thumbnail;
+      preview.style.display = 'block';
+      document.getElementById('thumbnail-area').style.display = 'none';
+      document.getElementById('remove-thumbnail').style.display = 'block';
+    }
+    document.getElementById('save-indicator').textContent = '読み込み完了';
+    document.getElementById('save-indicator').className = 'save-indicator saved';
+    setTimeout(() => {
+      document.getElementById('save-indicator').textContent = '';
+    }, 2000);
+  } catch(e) {
+    showToast('記事の読み込みに失敗しました');
+    document.getElementById('save-indicator').textContent = '読み込み失敗';
+  }
+}
+
 // === 保存 ===
-function saveArticle() {
+async function saveArticle() {
   const title = document.getElementById('title-input').value.trim();
   if (!title) { showToast('タイトルを入力してください'); return; }
-  const content = document.getElementById('edit-area').innerHTML.trim();
-  if (!content || content === '') { showToast('本文を入力してください'); return; }
+  const bodyContent = document.getElementById('edit-area').innerHTML.trim();
+  if (!bodyContent) { showToast('本文を入力してください'); return; }
 
-  const article = {
-    id: Date.now().toString(),
-    title,
-    content,
-    tags: [...tags],
-    date: document.getElementById('pub-date').value,
-    excerpt: document.getElementById('excerpt').value,
-    status: currentStatus,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
+  const saveBtn = document.getElementById('save-btn');
+  saveBtn.disabled = true;
+  document.getElementById('save-indicator').textContent = '保存中...';
+  document.getElementById('save-indicator').className = 'save-indicator saving';
 
-  // ここでGitHub Contents APIに保存する処理
-  console.log('保存するデータ:', article);
+  try {
+    // 全記事を取得（最新状態）
+    if (!allArticles.length) {
+      const base = typeof BLOG_CONFIG !== 'undefined' ? `/${BLOG_CONFIG.GITHUB_REPO}` : '';
+      const res = await fetch(`${base}/data/articles.json?_=${Date.now()}`);
+      const json = await res.json();
+      allArticles = json.articles || [];
+    }
 
-  // バックアップ削除
-  localStorage.removeItem('article_backup');
+    const now = new Date().toISOString();
+    const thumbnail = document.getElementById('thumbnail-preview').style.display !== 'none'
+      ? document.getElementById('thumbnail-preview').src : '';
 
-  document.getElementById('save-indicator').textContent = '保存済み';
-  document.getElementById('save-indicator').className = 'save-indicator saved';
-  showToast(currentStatus === 'published' ? '記事を公開しました 🎉' : '下書きを保存しました');
+    if (editingId) {
+      // 既存記事の更新
+      const idx = allArticles.findIndex(a => a.id === editingId);
+      if (idx !== -1) {
+        allArticles[idx] = {
+          ...allArticles[idx],
+          title,
+          content: bodyContent,
+          tags: [...tags],
+          date: document.getElementById('pub-date').value,
+          excerpt: document.getElementById('excerpt').value,
+          thumbnail,
+          status: currentStatus,
+          updatedAt: now,
+        };
+      }
+    } else {
+      // 新規記事の追加
+      const newArticle = {
+        id: Date.now().toString(),
+        title,
+        content: bodyContent,
+        tags: [...tags],
+        date: document.getElementById('pub-date').value,
+        excerpt: document.getElementById('excerpt').value,
+        thumbnail,
+        status: currentStatus,
+        createdAt: now,
+        updatedAt: now,
+      };
+      allArticles.unshift(newArticle);
+      editingId = newArticle.id;
+      // URLを更新（新規→編集モードへ）
+      history.replaceState(null, '', `editor.html?id=${editingId}`);
+      document.getElementById('header-mode').textContent = '記事を編集';
+    }
+
+    // GitHub API（TODO: PAT設定後に有効化）
+    console.log('保存する記事データ:', allArticles);
+    // await githubSaveArticles(allArticles);
+
+    localStorage.removeItem('article_backup');
+    document.getElementById('save-indicator').textContent = `保存済み ${new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}`;
+    document.getElementById('save-indicator').className = 'save-indicator saved';
+    showToast(currentStatus === 'published' ? '記事を公開しました 🎉' : '下書きを保存しました');
+
+  } catch(e) {
+    showToast('保存に失敗しました: ' + e.message);
+    document.getElementById('save-indicator').textContent = '保存失敗';
+  } finally {
+    saveBtn.disabled = false;
+  }
 }
 
 function saveDraft() {
