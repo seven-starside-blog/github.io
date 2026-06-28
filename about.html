@@ -3,86 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>自己紹介 | ナナボシサイド★ブログ</title>
-<meta name="description" content="ナナボシサイド★ブログの管理人の自己紹介ページです。">
+<title>自己紹介 | seven-starside-blog</title>
+<meta name="description" content="seven-starside-blogの管理人プロフィールページです。">
 <link rel="stylesheet" href="/seven-starside-blog/assets/style.css">
 <script src="/seven-starside-blog/admin/config.js"></script>
 <style>
-  .about-hero {
-    background: linear-gradient(160deg, var(--red-900) 0%, #3a0505 100%);
-    padding: 56px 20px 48px;
-    color: #fff;
-    text-align: center;
-  }
-  .avatar-ring {
-    width: 96px; height: 96px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--red-400), var(--red-800));
-    display: inline-flex; align-items: center; justify-content: center;
-    font-size: 40px; margin-bottom: 16px;
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.15);
-  }
-  .about-hero h1 { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
-  .about-hero .tagline { font-size: 14px; color: rgba(255,255,255,0.6); }
+  .about-hero { background:linear-gradient(160deg,var(--red-900) 0%,#3a0505 100%); padding:56px 20px 48px; color:#fff; text-align:center; }
+  .avatar-ring { width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--red-400),var(--red-800));display:inline-flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:16px;box-shadow:0 0 0 4px rgba(255,255,255,0.15);overflow:hidden; }
+  .avatar-ring img { width:100%;height:100%;object-fit:cover; }
+  .about-hero h1 { font-size:24px;font-weight:800;margin-bottom:6px; }
+  .about-hero .tagline { font-size:14px;color:rgba(255,255,255,0.6); }
+  .about-body { padding:40px 0 60px; }
+  .profile-card { background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:28px;margin-bottom:24px; }
+  .profile-card h2 { font-size:16px;font-weight:700;color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:8px; }
+  .profile-card h2::after { content:'';flex:1;height:1px;background:var(--red-100); }
+  .profile-table { width:100%;border-collapse:collapse;font-size:14px; }
+  .profile-table tr { border-bottom:1px solid var(--border); }
+  .profile-table tr:last-child { border-bottom:none; }
+  .profile-table th { padding:10px 12px 10px 0;color:var(--text-muted);font-weight:600;width:120px;vertical-align:top;white-space:nowrap; }
+  .profile-table td { padding:10px 0;line-height:1.6; }
+  .intro-text { font-size:15px;line-height:1.85;color:var(--text); }
+  .intro-text p { margin-bottom:14px; }
+  .intro-text p:last-child { margin-bottom:0; }
 
-  .about-body { padding: 40px 0 60px; }
-
-  .profile-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px;
-    margin-bottom: 24px;
+  /* SNSボタン */
+  .sns-grid { display:flex;flex-wrap:wrap;gap:8px; }
+  .sns-btn {
+    display:inline-flex;align-items:center;gap:8px;
+    padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;
+    text-decoration:none;transition:transform 0.15s,box-shadow 0.15s;
+    border:1px solid var(--border);background:var(--bg);color:var(--text);
   }
-  .profile-card h2 {
-    font-size: 16px; font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 16px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .profile-card h2::after {
-    content: ''; flex: 1; height: 1px; background: var(--red-100);
-  }
-  .profile-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  .profile-table tr { border-bottom: 1px solid var(--border); }
-  .profile-table tr:last-child { border-bottom: none; }
-  .profile-table th { padding: 10px 12px 10px 0; color: var(--text-muted); font-weight: 600; width: 100px; vertical-align: top; white-space: nowrap; }
-  .profile-table td { padding: 10px 0; line-height: 1.6; }
+  .sns-btn:hover { transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,0.1); }
+  .sns-btn .sns-icon { font-size:16px;width:20px;text-align:center;flex-shrink:0; }
+  .sns-btn[data-service="x"]         { background:#000;border-color:#000;color:#fff; }
+  .sns-btn[data-service="instagram"] { background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);border-color:transparent;color:#fff; }
+  .sns-btn[data-service="youtube"]   { background:#ff0000;border-color:#ff0000;color:#fff; }
+  .sns-btn[data-service="github"]    { background:#24292e;border-color:#24292e;color:#fff; }
+  .sns-btn[data-service="bluesky"]   { background:#0085ff;border-color:#0085ff;color:#fff; }
+  .sns-btn[data-service="tiktok"]    { background:#010101;border-color:#010101;color:#fff; }
+  .sns-btn[data-service="note"]      { background:#41c9b4;border-color:#41c9b4;color:#fff; }
+  .sns-btn[data-service="threads"]   { background:#101010;border-color:#101010;color:#fff; }
+  .sns-btn[data-service="facebook"]  { background:#1877f2;border-color:#1877f2;color:#fff; }
+  .sns-btn[data-service="linkedin"]  { background:#0a66c2;border-color:#0a66c2;color:#fff; }
 
-  .intro-text { font-size: 15px; line-height: 1.85; color: var(--text); }
-  .intro-text p { margin-bottom: 14px; }
-  .intro-text p:last-child { margin-bottom: 0; }
-
-  /* スキルタグ */
-  .skill-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-  .skill-tag {
-    background: var(--red-50); border: 1px solid var(--red-100);
-    color: var(--red-700); border-radius: 6px;
-    padding: 4px 12px; font-size: 13px; font-weight: 500;
-  }
-
-  /* 広告 */
-  .ad-sidebar { position: sticky; top: calc(var(--header-h) + 16px); }
-
-  @media (min-width: 700px) {
-    .about-layout { display: grid; grid-template-columns: 1fr 240px; gap: 24px; }
-  }
+  @media(min-width:700px){.about-layout{display:grid;grid-template-columns:1fr 240px;gap:24px;}}
+  .sidebar-sticky{position:sticky;top:calc(var(--header-h)+16px);}
 </style>
 </head>
 <body>
-
 <header class="site-header">
-  <a href="/seven-starside-blog/" class="logo">ナナボシサイド<span>★</span>ブログ</a>
-  <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開く">
-    <span></span><span></span><span></span>
-  </button>
+  <a href="/seven-starside-blog/" class="logo">seven<span>★</span>starside</a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開く"><span></span><span></span><span></span></button>
 </header>
 
 <main class="page-body">
-  <!-- ヒーロー -->
-  <div class="about-hero">
-    <div class="avatar-ring">★</div>
-    <h1>管理人について</h1>
+  <div class="about-hero" id="about-hero">
+    <div class="avatar-ring" id="avatar-el">★</div>
+    <h1 id="hero-name">seven-starside</h1>
+    <p class="tagline" id="hero-tagline">ブログ管理人</p>
   </div>
 
   <div class="about-body">
@@ -93,55 +72,22 @@
           <div class="profile-card">
             <h2>はじめまして</h2>
             <div class="intro-text" id="intro-text">
-              <p>こんにちは！このブログを運営している管理人です。</p>
-              <p>日々の出来事や趣味・関心のあることを自由に書いています。読んでいただけたら嬉しいです。</p>
-              <p>※この自己紹介文は管理画面から自由に編集できます。</p>
+              <div class="loading-spinner" style="padding:20px 0"><div class="spinner"></div></div>
             </div>
           </div>
 
           <!-- プロフィール -->
-          <div class="profile-card">
+          <div class="profile-card" id="profile-card">
             <h2>プロフィール</h2>
-            <table class="profile-table">
-              <tr><th>ハンドル名</th><td>ナナボシサイド</td></tr>
-              <tr><th>好きなこと</th><td>ブログを書くこと、読書、散歩</td></tr>
-              <tr><th>このブログについて</th><td>日々の出来事や考えたことを気ままに綴っています</td></tr>
+            <table class="profile-table" id="profile-table">
+              <tr><td colspan="2" style="color:var(--text-muted);font-size:13px;">読み込み中...</td></tr>
             </table>
           </div>
 
-          <!-- 広告 -->
-          <div class="ad-unit">広告スペース</div>
-        </div>
-
-        <!-- サイドバー -->
-        <div>
-          <div class="ad-sidebar">
-            <div class="profile-card" style="text-align:center;">
-              <div style="font-size:48px;margin-bottom:12px;">★</div>
-              <div style="font-size:16px;font-weight:700;margin-bottom:4px;">ナナボシサイド</div>
-              <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">ブログ管理人</div>
-              <a href="/seven-starside-blog/articles.html" style="display:block;padding:9px;background:var(--accent);color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-align:center;">記事一覧を見る</a>
-            </div>
-            <div class="ad-unit" style="min-height:250px;flex-direction:column;gap:4px;">
-              <div>広告スペース</div><div style="font-size:11px;">(サイドバー)</div>
-            </div>
+          <!-- SNS -->
+          <div class="profile-card" id="sns-card" style="display:none;">
+            <h2>SNS・リンク</h2>
+            <div class="sns-grid" id="sns-grid"></div>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</main>
 
-<footer class="site-footer">
-  <div class="footer-links">
-    <a href="/seven-starside-blog/">トップ</a>
-    <a href="/seven-starside-blog/about.html">自己紹介</a>
-    <a href="/seven-starside-blog/articles.html">記事一覧</a>
-  </div>
-  <div>© 2025 seven-starside-blog</div>
-</footer>
-
-<script src="/seven-starside-blog/assets/app.js"></script>
-<script>initDrawer('about.html');</script>
-</body>
-</html>
+         
