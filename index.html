@@ -3,38 +3,132 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>マイブログ</title>
+<title>seven-starside-blog</title>
+<meta name="description" content="日々の出来事や考えを綴るブログ">
+<link rel="stylesheet" href="/seven-starside-blog/assets/style.css">
+<script src="/seven-starside-blog/admin/config.js"></script>
 <style>
-  body {
-    font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
-    background: #5a0808;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  /* ヒーロー */
+  .hero {
+    background: linear-gradient(160deg, var(--red-900) 0%, #3a0505 60%, #1a0303 100%);
     color: #fff;
+    padding: 72px 20px 60px;
     text-align: center;
+    position: relative;
+    overflow: hidden;
   }
-  h1 { font-size: 28px; margin-bottom: 12px; }
-  p  { color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 24px; }
-  a  {
-    display: inline-block;
-    padding: 10px 20px;
-    background: rgba(255,255,255,0.12);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 8px;
-    color: #fff;
-    text-decoration: none;
-    font-size: 13px;
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 40%, rgba(204,34,34,0.2) 0%, transparent 60%);
+    pointer-events: none;
   }
-  a:hover { background: rgba(255,255,255,0.2); }
+  .hero-label { font-size: 12px; letter-spacing: 0.15em; color: var(--red-400); text-transform: uppercase; margin-bottom: 14px; font-weight: 600; }
+  .hero h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.2; margin-bottom: 16px; }
+  .hero h1 span { color: var(--red-400); }
+  .hero p { font-size: 15px; color: rgba(255,255,255,0.65); max-width: 480px; margin: 0 auto 28px; line-height: 1.7; }
+  .hero-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 11px 24px;
+    background: var(--red-600); color: #fff;
+    border-radius: 30px; font-size: 14px; font-weight: 600;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .hero-btn:hover { background: var(--red-700); transform: translateY(-1px); }
+
+  /* セクション共通 */
+  section { padding: 48px 0; }
+  .section-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 24px; }
+  .section-title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+  .section-title span { color: var(--accent); }
+  .section-more { margin-left: auto; font-size: 13px; color: var(--accent); font-weight: 600; white-space: nowrap; }
+  .section-more:hover { text-decoration: underline; }
+
+  /* 記事グリッド */
+  .articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+
+  /* 区切り線 */
+  .divider { height: 1px; background: var(--border); margin: 0; }
 </style>
 </head>
 <body>
-  <div>
-    <h1>🚧 準備中</h1>
-    <p>ブログは現在構築中です。</p>
-    <a href="admin/index.html">管理画面へ</a>
+
+<!-- ヘッダー -->
+<header class="site-header">
+  <a href="/seven-starside-blog/" class="logo">seven<span>★</span>starside</a>
+  <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開く">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<main class="page-body">
+
+  <!-- ヒーロー -->
+  <div class="hero">
+    <div class="hero-label">Welcome to my blog</div>
+    <h1>seven<span>★</span>starside<br>blog</h1>
+    <p>日々の出来事や趣味、考えたことを<br>気ままに綴っていきます。</p>
+    <a href="/seven-starside-blog/articles.html" class="hero-btn">
+      記事を読む
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
   </div>
+
+  <!-- 広告（ヒーロー直下） -->
+  <div class="container">
+    <div class="ad-unit">広告スペース（横長）</div>
+  </div>
+
+  <!-- 最近の記事 -->
+  <section>
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">最近の<span>記事</span></h2>
+        <a href="/seven-starside-blog/articles.html" class="section-more">すべて見る →</a>
+      </div>
+      <div class="articles-grid" id="recent-articles">
+        <div class="loading-spinner"><div class="spinner"></div><span>読み込み中...</span></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- フッター -->
+<footer class="site-footer">
+  <div class="footer-links">
+    <a href="/seven-starside-blog/">トップ</a>
+    <a href="/seven-starside-blog/about.html">自己紹介</a>
+    <a href="/seven-starside-blog/articles.html">記事一覧</a>
+  </div>
+  <div>© 2025 seven-starside-blog</div>
+</footer>
+
+<script src="/seven-starside-blog/assets/app.js"></script>
+<script>
+initDrawer('');
+
+(async () => {
+  const articles = await fetchArticles();
+  const grid = document.getElementById('recent-articles');
+
+  if (!articles.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="icon">📝</div><p>まだ記事がありません</p></div>';
+    return;
+  }
+
+  const recent = articles.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6);
+  grid.innerHTML = recent.map(a => `
+    <a href="/seven-starside-blog/article.html?id=${a.id}" class="article-card">
+      <div class="thumb">${a.thumbnail ? `<img src="${a.thumbnail}" alt="">` : '✦'}</div>
+      <div class="card-body">
+        <div class="card-date">${formatDate(a.date)}</div>
+        <div class="card-title">${a.title}</div>
+        <div class="card-excerpt">${a.excerpt || ''}</div>
+        <div class="card-tags">${(a.tags||[]).map(t => `<span class="tag">${t}</span>`).join('')}</div>
+      </div>
+    </a>`).join('');
+})();
+</script>
 </body>
 </html>
