@@ -279,20 +279,25 @@ window.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  // URLにエラーパラメータがあれば先に表示（セッションチェックより優先）
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('error') === 'unauthorized') {
+    showError('このGoogleアカウントはアクセス権がありません。');
+    return;
+  } else if (params.get('error') === 'expired') {
+    showError('セッションの有効期限が切れました。再ログインしてください。');
+    return;
+  }
+
+  // 有効なセッションがあればエディターへ（エラー時は飛ばさない）
   const session = getSession();
   if (session && isSessionValid(session)) {
-    // 有効なセッションがあればエディターへ
     window.location.href = 'editor.html';
     return;
   }
 
-  // URLにエラーパラメータがあれば表示
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('error') === 'unauthorized') {
-    showError('このGoogleアカウントはアクセス権がありません。');
-  } else if (params.get('error') === 'expired') {
-    showError('セッションの有効期限が切れました。再ログインしてください。');
-  }
+  // 無効なセッションは念のり削除
+  sessionStorage.removeItem('admin_session');
 });
 
 // === Googleログイン開始 ===
