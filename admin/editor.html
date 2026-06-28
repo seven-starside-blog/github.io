@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>記事エディター | 管理画面</title>
+<script src="config.js"></script>
+<script src="auth-guard.js"></script>
+<style>
+  :root {
+    --red-50: #fff1f1;
+    --red-100: #ffe0e0;
+    --red-200: #ffc0c0;
+    --red-400: #f06060;
+    --red-600: #cc2222;
+    --red-700: #aa1818;
+    --red-800: #881010;
+    --red-900: #5a0808;
+    --gray-50: #fafafa;
+    --gray-100: #f4f4f4;
+    --gray-200: #e8e8e8;
+    --gray-300: #d0d0d0;
+    --gray-500: #888;
+    --gray-700: #444;
+    --gray-900: #111;
+    --bg: #fff;
+    --surface: #fafafa;
+    --border: #e0e0e0;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --accent: #cc2222;
+    --accent-hover: #aa1818;
+    --radius: 8px;
+    --font: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2e2e2e;
+      --text: #f0f0f0;
+      --text-muted: #888;
+      --gray-100: #222;
+      --gray-200: #2e2e2e;
+      --gray-300: #3e3e3e;
+      --gray-50: #1a1a1a;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* === ヘッダー === */
+  header {
+    background: var(--red-900);
+    color: #fff;
+    padding: 0 20px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  header .logo {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #fff;
+    text-decoration: none;
+  }
+  header .sep { color: rgba(255,255,255,0.3); }
+  header .page-title { font-size: 13px; color: rgba(255,255,255,0.7); }
+  header .spacer { flex: 1; }
+  header .user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+  }
+  header .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--red-600);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  /* === レイアウト === */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 0;
+    flex: 1;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px 16px;
+    gap: 20px;
+  }
+
+  /* === メインエリア === */
+  .main-area { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+  /* === カード === */
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--gray-50);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-header h2 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .card-body { padding: 16px; }
+
+  /* === タイトル入力 === */
+  #title-input {
+    width: 100%;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: var(--font);
+    line-height: 1.4;
+    padding: 4px 0;
+  }
+  #title-input::placeholder { color: var(--gray-300); }
+
+  /* === ツールバー === */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 12px;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+  }
+  .toolbar-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 6px;
+  }
+  .tb-btn {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    border-radius: 5px;
+    cursor: pointer;
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font);
+    transition: background 0.1s, color 0.1s;
+    position: relative;
+  }
+  .tb-btn:hover { background: var(--gray-200); color: var(--text); }
+  .tb-btn.active { background: var(--red-50); color: var(--accent); }
+  .tb-btn svg { width: 14px; height: 14px; }
+  .tb-btn[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -26px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gray-900);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .tb-select {
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 12px;
+    padding: 0 6px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  /* === エディター本体 === */
+  #editor {
+    min-height: 420px;
+    padding: 16px;
+    outline: none;
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text);
+    font-family: var(--font);
+  }
+  #editor:empty::before {
+    content: '本文を入力してください…';
+    color: var(--gray-300);
+    pointer-events: none;
+  }
+  #editor h1 { font-size: 22px; font-weight: 700; margin: 16px 0 8px; color: var(--text); }
+  #editor h2 { font-size: 18px; font-weight: 700; margin: 14px 0 6px; border-bottom: 2px solid var(--red-200); padding-bottom: 4px; color: var(--text); }
+  #editor h3 { font-size: 15px; font-weight: 700; margin: 12px 0 4px; color: var(--text); }
+  #editor p { margin: 0 0 8px; }
+  #editor strong { color: var(--accent); }
+  #editor em { font-style: italic; }
+  #editor blockquote {
+    border-left: 3px solid var(--red-400);
+    padding: 4px 12px;
+    margin: 8px 0;
+    color: var(--text-muted);
+    background: var(--red-50);
+    border-radius: 0 4px 4px 0;
+  }
+  #editor code {
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: 'Menlo', monospace;
+    font-size: 12px;
+  }
+  #editor pre {
+    background: var(--gray-900);
+    color: #e0e0e0;
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+  #editor pre code { background: none; border: none; color: inherit; font-size: 13px; }
+  #editor ul, #editor ol { padding-left: 20px; margin: 4px 0 8px; }
+  #editor a { color: var(--accent); text-decoration: underline; }
+  #editor img { max-width: 100%; border-radius: 6px; margin: 8px 0; }
+
+  /* === プレビュー === */
+  #preview-pane {
+    display: none;
+    padding: 20px 24px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+  #preview-pane h1 { font-size: 24px; font-weight: 700; margin: 0 0 20px; color: var(--text); }
+  #preview-pane h2 { font-size: 18px; margin: 20px 0 8px; border-bottom: 2px solid var(--red-200); padding-bottom: 4px; }
+  #preview-pane strong { color: var(--accent); }
+  #preview-pane blockquote { border-left: 3px solid var(--red-400); padding: 4px 12px; background: var(--red-50); color: var(--text-muted); border-radius: 0 4px 4px 0; }
+
+  .mode-tabs {
+    display: flex;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--border);
+    padding: 0 12px;
+    gap: 0;
+  }
+  .mode-tab {
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font-family: var(--font);
+    transition: color 0.15s;
+  }
+  .mode-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .mode-tab:hover:not(.active) { color: var(--text); }
+
+  .word-count {
+    padding: 6px 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+  }
+
+  /* === バックアップバナー === */
+  .backup-bar {
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: 7px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: none;
+  }
+  .backup-bar.visible { display: flex; }
+  .backup-bar .restore-btn {
+    margin-left: auto;
+    background: none;
+    border: 1px solid var(--gray-300);
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--text);
+    font-family: var(--font);
+  }
+  .backup-bar .restore-btn:hover { background: var(--gray-200); }
+
+  /* === サイドバー === */
+  .sidebar { display: flex; flex-direction: column; gap: 14px; }
+
+  .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  input[type="date"], input[type="text"], textarea, select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--font);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type="date"]:focus, input[type="text"]:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(204,34,34,0.1);
+  }
+
+  /* === タグ入力 === */
+  .tags-container {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+    min-height: 38px;
+    cursor: text;
+    transition: border-color 0.15s;
+    background: var(--bg);
+  }
+  .tags-container:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(204,34,34,0.1);
+  }
+  .tag-chip {
+    background: var(--red-50);
+    border: 1px solid var(--red-200);
+    color: var(--red-700);
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tag-chip .remove-tag {
+    cursor: pointer;
+    opacity: 0.5;
+    font-size: 13px;
+    line-height: 1;
+    padding: 0 1px;
+  }
+  .tag-chip .remove-tag:hover { opacity: 1; }
+  #tag-input {
+    border: none !important;
+    outline: none !important;
+    padding: 2px 4px !important;
+    font-size: 12px;
+    min-width: 80px;
+    flex: 1;
+    background: transparent;
+    box-shadow: none !important;
+  }
+
+  /* === アイキャッチ === */
+  .thumbnail-area {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .thumbnail-area:hover { border-color: var(--accent); background: var(--red-50); }
+  .thumbnail-preview {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: 6px;
+    display: none;
+  }
+
+  /* === ステータス === */
+  .status-group { display: flex; gap: 6px; }
+  .status-btn {
+    flex: 1;
+    padding: 7px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    font-family: var(--font);
+  }
+  .status-btn.active[data-status="draft"] {
+    background: var(--gray-100);
+    border-color: var(--gray-400);
+    color: var(--gray-700);
+    font-weight: 600;
+  }
+  .status-btn.active[data-status="published"] {
+    background: var(--red-50);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* === アクションボタン === */
+  .action-group { display: flex; flex-direction: column; gap: 8px; }
+  .btn-primary {
+    width: 100%;
+    padding: 11px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: background 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-primary:disabled { background: var(--gray-300); cursor: not-allowed; }
+  .btn-secondary {
+    width: 100%;
+    padding: 9px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--gray-400); color: var(--text); background: var(--gray-50); }
+
+  /* === 保存中インジケーター === */
+  .save-indicator {
+    font-size: 11px;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 4px;
+  }
+  .save-indicator.saving { color: var(--accent); }
+  .save-indicator.saved { color: #228b22; }
+
+  /* === リンク挿入モーダル === */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 20px;
+    width: 340px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+  .modal h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+  .modal .field { margin-bottom: 10px; }
+  .modal .field label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .modal-actions .btn-cancel {
+    flex: 1; padding: 8px; background: var(--gray-100); border: none; border-radius: 6px;
+    cursor: pointer; font-family: var(--font); font-size: 13px; color: var(--text);
+  }
+  .modal-actions .btn-insert {
+    flex: 1; padding: 8px; background: var(--accent); border: none; border-radius: 6px;
+    cursor: pointer; font-family: var(--font); font-size: 13px; color: #fff; font-weight: 600;
+  }
+
+  /* === 自動保存トースト === */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--gray-900);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 300;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* レスポンシブ */
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { order: -1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<header>
+  <a href="/admin/" class="logo">管理画面</a>
+  <span class="sep">/</span>
+  <span class="page-title" id="header-mode">新規記事</span>
+  <div class="spacer"></div>
+  <div class="user-info">
+    <div class="avatar" id="user-avatar">U</div>
+    <span id="user-name">ログイン中...</span>
+    <button onclick="adminLogout()" style="margin-left:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:5px;color:#fff;font-size:11px;padding:3px 8px;cursor:pointer;font-family:inherit;">ログアウト</button>
+  </div>
+</header>
+
+<!-- モーダル：リンク挿入 -->
+<div class="modal-overlay" id="link-modal">
+  <div class="modal">
+    <h3>リンクを挿入</h3>
+    <div class="field">
+      <label>表示テキスト</label>
+      <input type="text" id="link-text" placeholder="リンクテキスト">
+    </div>
+    <div class="field">
+      <label>URL</label>
+      <input type="text" id="link-url" placeholder="https://...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeLinkModal()">キャンセル</button>
+      <button class="btn-insert" onclick="insertLink()">挿入</button>
+    </div>
+  </div>
+</div>
+
+<!-- トースト -->
+<div class="toast" id="toast"></div>
+
+<!-- メインレイアウト -->
+<div class="layout">
+
+  <!-- 左：エディター -->
+  <div class="main-area">
+
+    <!-- バックアップバナー -->
+    <div class="backup-bar" id="backup-bar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0"/><path d="M12 8v4l3 3"/></svg>
+      前回の下書きが残っています
+      <button class="restore-btn" onclick="restoreBackup()">復元する</button>
+    </div>
+
+    <!-- タイトル -->
+    <div class="card">
+      <div class="card-body">
+        <input type="text" id="title-input" placeholder="記事のタイトルを入力..." maxlength="120">
+      </div>
+    </div>
+
+    <!-- エディター本体 -->
+    <div class="card" style="overflow:visible">
+      <!-- モードタブ -->
+      <div class="mode-tabs">
+        <button class="mode-tab active" onclick="setMode('edit')">編集</button>
+        <button class="mode-tab" onclick="setMode('preview')">プレビュー</button>
+        <button class="mode-tab" onclick="setMode('split')">分割</button>
+      </div>
+
+      <!-- ツールバー -->
+      <div class="toolbar" id="editor-toolbar">
+        <div class="toolbar-group">
+          <select class="tb-select" onchange="formatBlock(this.value); this.value=''" title="見出し">
+            <option value="">段落</option>
+            <option value="h1">見出し1</option>
+            <option value="h2">見出し2</option>
+            <option value="h3">見出し3</option>
+            <option value="blockquote">引用</option>
+            <option value="pre">コード</option>
+          </select>
+        </div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-group">
+          <button class="tb-btn" onclick="execCmd('bold')" title="太字 (Ctrl+B)"><b>B</b></button>
+          <button class="tb-btn" onclick="execCmd('italic')" title="斜体 (Ctrl+I)"><i>I</i></button>
+          <button class="tb-btn" onclick="execCmd('underline')" title="下線 (Ctrl+U)"><u>U</u></button>
+          <button class="tb-btn" onclick="execCmd('strikeThrough')" title="打ち消し線">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><path d="M7 8c0-2.2 2-4 5-4s5 1.8 5 4"/><path d="M7 16c0 2.2 2 4 5 4s5-1.8 5-4"/></svg>
+          </button>
+        </div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-group">
+          <button class="tb-btn" onclick="execCmd('insertUnorderedList')" title="箇条書き">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+          </button>
+          <button class="tb-btn" onclick="execCmd('insertOrderedList')" title="番号リスト">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="6" x2="20" y2="6"/><line x1="10" y1="12" x2="20" y2="12"/><line x1="10" y1="18" x2="20" y2="18"/><text x="2" y="8" font-size="8" fill="currentColor" stroke="none" font-family="sans-serif">1.</text><text x="2" y="14" font-size="8" fill="currentColor" stroke="none" font-family="sans-serif">2.</text><text x="2" y="20" font-size="8" fill="currentColor" stroke="none" font-family="sans-serif">3.</text></svg>
+          </button>
+        </div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-group">
+          <button class="tb-btn" onclick="openLinkModal()" title="リンクを挿入">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          </button>
+          <button class="tb-btn" onclick="insertImage()" title="画像を挿入">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          </button>
+          <button class="tb-btn" onclick="insertHr()" title="区切り線">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg>
+          </button>
+        </div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-group">
+          <button class="tb-btn" onclick="document.execCommand('undo')" title="元に戻す (Ctrl+Z)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M3 13A9 9 0 1021 12"/></svg>
+          </button>
+          <button class="tb-btn" onclick="document.execCommand('redo')" title="やり直す (Ctrl+Y)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M21 13A9 9 0 113 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- コンテンツエリア（編集 + プレビュー） -->
+      <div id="edit-area" contenteditable="true" id="editor" style="min-height:420px;padding:16px;outline:none;font-size:15px;line-height:1.8;color:var(--text);font-family:var(--font);" data-placeholder="本文を入力してください…"></div>
+      <div id="preview-pane"></div>
+
+      <!-- 文字数 -->
+      <div class="word-count">
+        <span id="char-count">0 文字</span>
+        <span id="reading-time">読了時間: 約0分</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 右：サイドバー -->
+  <div class="sidebar">
+
+    <!-- 公開アクション -->
+    <div class="card">
+      <div class="card-header"><h2>公開設定</h2></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
+
+        <!-- ステータス -->
+        <div>
+          <div class="field-label">ステータス</div>
+          <div class="status-group">
+            <button class="status-btn active" data-status="draft" onclick="setStatus('draft')">下書き</button>
+            <button class="status-btn" data-status="published" onclick="setStatus('published')">公開</button>
+          </div>
+        </div>
+
+        <!-- 日付 -->
+        <div>
+          <div class="field-label">公開日時</div>
+          <input type="date" id="pub-date">
+        </div>
+
+        <div class="save-indicator" id="save-indicator">未保存</div>
+
+        <div class="action-group">
+          <button class="btn-primary" onclick="saveArticle()" id="save-btn">保存する</button>
+          <button class="btn-secondary" onclick="saveDraft()">下書き保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- タグ -->
+    <div class="card">
+      <div class="card-header"><h2>タグ</h2></div>
+      <div class="card-body">
+        <div class="tags-container" id="tags-container" onclick="document.getElementById('tag-input').focus()">
+          <input type="text" id="tag-input" placeholder="タグを入力 Enter で追加" style="border:none;outline:none;padding:2px 4px;font-size:12px;min-width:80px;flex:1;background:transparent;box-shadow:none;">
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">Enterまたはカンマで追加</p>
+      </div>
+    </div>
+
+    <!-- アイキャッチ -->
+    <div class="card">
+      <div class="card-header"><h2>アイキャッチ画像</h2></div>
+      <div class="card-body">
+        <img id="thumbnail-preview" class="thumbnail-preview" alt="アイキャッチ">
+        <div class="thumbnail-area" id="thumbnail-area" onclick="document.getElementById('thumbnail-input').click()">
+          <div style="font-size:24px;margin-bottom:6px;opacity:0.3">🖼</div>
+          <div>クリックして画像を選択</div>
+          <div style="font-size:11px;margin-top:2px;opacity:0.6">PNG, JPG, WebP / 最大5MB</div>
+        </div>
+        <input type="file" id="thumbnail-input" accept="image/*" style="display:none" onchange="handleThumbnail(this)">
+        <button id="remove-thumbnail" onclick="removeThumbnail()" style="display:none;width:100%;margin-top:8px;padding:6px;background:none;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text-muted);cursor:pointer;">画像を削除</button>
+      </div>
+    </div>
+
+    <!-- 抜粋 -->
+    <div class="card">
+      <div class="card-header"><h2>抜粋 / 説明文</h2></div>
+      <div class="card-body">
+        <textarea id="excerpt" rows="3" placeholder="記事の概要（検索結果やOGPに使用）" style="resize:vertical;"></textarea>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right;" id="excerpt-count">0 / 160</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// === 状態管理 ===
+let currentStatus = 'draft';
+let tags = [];
+let savedRange = null;
+let autoSaveTimer = null;
+
+// === 初期化 ===
+document.addEventListener('DOMContentLoaded', () => {
+  // 今日の日付をデフォルト設定
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('pub-date').value = today;
+
+  // バックアップチェック
+  const backup = localStorage.getItem('article_backup');
+  if (backup) {
+    document.getElementById('backup-bar').classList.add('visible');
+  }
+
+  // セッションからユーザー情報を表示（auth-guard.jsで保証済み）
+  const session = window.ADMIN_SESSION;
+  if (session) {
+    document.getElementById('user-name').textContent = session.name || session.email;
+    if (session.picture) {
+      document.getElementById('user-avatar').innerHTML = `<img src="${session.picture}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    } else {
+      document.getElementById('user-avatar').textContent = (session.name || 'U').charAt(0).toUpperCase();
+    }
+  }
+
+  // プレースホルダー処理
+  const editArea = document.getElementById('edit-area');
+  editArea.addEventListener('focus', () => { if (editArea.innerHTML === '') editArea.style.color = 'var(--text)'; });
+  editArea.addEventListener('blur', () => {});
+  updateWordCount();
+});
+
+// === 編集モード切替 ===
+let currentMode = 'edit';
+function setMode(mode) {
+  currentMode = mode;
+  const editArea = document.getElementById('edit-area');
+  const previewPane = document.getElementById('preview-pane');
+  const toolbar = document.getElementById('editor-toolbar');
+
+  document.querySelectorAll('.mode-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['edit','preview','split'][i] === mode);
+  });
+
+  if (mode === 'edit') {
+    editArea.style.display = 'block';
+    previewPane.style.display = 'none';
+    toolbar.style.display = 'flex';
+  } else if (mode === 'preview') {
+    editArea.style.display = 'none';
+    previewPane.style.display = 'block';
+    toolbar.style.display = 'none';
+    previewPane.innerHTML = '<h1 style="font-size:22px;font-weight:700;margin-bottom:16px;">' +
+      (document.getElementById('title-input').value || 'タイトルなし') + '</h1>' +
+      document.getElementById('edit-area').innerHTML;
+  } else {
+    editArea.style.display = 'block';
+    previewPane.style.display = 'block';
+    editArea.style.width = '50%';
+    previewPane.style.width = '50%';
+    previewPane.style.borderLeft = '1px solid var(--border)';
+    document.querySelector('.card-body.editor-wrap') && (document.querySelector('.card-body.editor-wrap').style.display = 'flex');
+    toolbar.style.display = 'flex';
+    previewPane.innerHTML = document.getElementById('edit-area').innerHTML;
+  }
+}
+
+// === ツールバーコマンド ===
+function execCmd(cmd) {
+  document.getElementById('edit-area').focus();
+  document.execCommand(cmd, false, null);
+  updateWordCount();
+}
+
+function formatBlock(tag) {
+  if (!tag) return;
+  document.getElementById('edit-area').focus();
+  if (tag === 'pre') {
+    const code = document.createElement('pre');
+    code.innerHTML = '<code>コードを入力</code>';
+    insertNodeAtCursor(code);
+  } else {
+    document.execCommand('formatBlock', false, tag);
+  }
+  updateWordCount();
+}
+
+function insertNodeAtCursor(node) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  range.deleteContents();
+  range.insertNode(node);
+  range.setStartAfter(node);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function insertHr() {
+  document.getElementById('edit-area').focus();
+  document.execCommand('insertHTML', false, '<hr style="border:none;border-top:2px solid var(--red-200);margin:16px 0;">');
+}
+
+// === リンクモーダル ===
+function openLinkModal() {
+  savedRange = window.getSelection().rangeCount > 0 ? window.getSelection().getRangeAt(0).cloneRange() : null;
+  const sel = window.getSelection();
+  if (sel && sel.toString()) {
+    document.getElementById('link-text').value = sel.toString();
+  }
+  document.getElementById('link-modal').classList.add('open');
+  document.getElementById('link-url').focus();
+}
+
+function closeLinkModal() {
+  document.getElementById('link-modal').classList.remove('open');
+  document.getElementById('link-text').value = '';
+  document.getElementById('link-url').value = '';
+}
+
+function insertLink() {
+  const text = document.getElementById('link-text').value || document.getElementById('link-url').value;
+  const url = document.getElementById('link-url').value;
+  if (!url) { closeLinkModal(); return; }
+  document.getElementById('edit-area').focus();
+  if (savedRange) {
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+  document.execCommand('insertHTML', false, `<a href="${url}" target="_blank">${text}</a>`);
+  closeLinkModal();
+  updateWordCount();
+}
+
+document.getElementById('link-url').addEventListener('keydown', e => { if (e.key === 'Enter') insertLink(); });
+
+// === 画像挿入 ===
+function insertImage() {
+  const url = prompt('画像URLを入力してください：');
+  if (url) {
+    document.getElementById('edit-area').focus();
+    document.execCommand('insertHTML', false, `<img src="${url}" alt="画像" style="max-width:100%;border-radius:6px;">`);
+    updateWordCount();
+  }
+}
+
+// === タグ管理 ===
+const tagInput = document.getElementById('tag-input');
+tagInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    addTag(tagInput.value.replace(',', '').trim());
+  } else if (e.key === 'Backspace' && tagInput.value === '' && tags.length > 0) {
+    removeTag(tags.length - 1);
+  }
+});
+
+function addTag(value) {
+  if (!value || tags.includes(value)) { tagInput.value = ''; return; }
+  tags.push(value);
+  renderTags();
+  tagInput.value = '';
+}
+
+function removeTag(index) {
+  tags.splice(index, 1);
+  renderTags();
+}
+
+function renderTags() {
+  const container = document.getElementById('tags-container');
+  container.querySelectorAll('.tag-chip').forEach(c => c.remove());
+  tags.forEach((tag, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${tag}<span class="remove-tag" onclick="removeTag(${i})">×</span>`;
+    container.insertBefore(chip, tagInput);
+  });
+}
+
+// === アイキャッチ ===
+function handleThumbnail(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { showToast('画像は5MB以内にしてください'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const preview = document.getElementById('thumbnail-preview');
+    const area = document.getElementById('thumbnail-area');
+    const removeBtn = document.getElementById('remove-thumbnail');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    area.style.display = 'none';
+    removeBtn.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeThumbnail() {
+  document.getElementById('thumbnail-preview').style.display = 'none';
+  document.getElementById('thumbnail-area').style.display = 'block';
+  document.getElementById('remove-thumbnail').style.display = 'none';
+  document.getElementById('thumbnail-input').value = '';
+}
+
+// === ステータス切替 ===
+function setStatus(status) {
+  currentStatus = status;
+  document.querySelectorAll('.status-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.status === status);
+  });
+  const saveBtn = document.getElementById('save-btn');
+  saveBtn.textContent = status === 'published' ? '公開する' : '保存する';
+}
+
+// === 文字数カウント ===
+const editArea = document.getElementById('edit-area');
+editArea.addEventListener('input', () => {
+  updateWordCount();
+  scheduleAutoSave();
+});
+
+function updateWordCount() {
+  const text = document.getElementById('edit-area').innerText || '';
+  const chars = text.length;
+  const minutes = Math.max(1, Math.ceil(chars / 400));
+  document.getElementById('char-count').textContent = `${chars.toLocaleString()} 文字`;
+  document.getElementById('reading-time').textContent = `読了時間: 約${minutes}分`;
+}
+
+// === 抜粋文字数 ===
+document.getElementById('excerpt').addEventListener('input', function() {
+  document.getElementById('excerpt-count').textContent = `${this.value.length} / 160`;
+  if (this.value.length > 160) {
+    this.value = this.value.slice(0, 160);
+    document.getElementById('excerpt-count').textContent = '160 / 160';
+  }
+});
+
+// === 自動保存（バックアップ） ===
+function scheduleAutoSave() {
+  clearTimeout(autoSaveTimer);
+  document.getElementById('save-indicator').textContent = '入力中…';
+  document.getElementById('save-indicator').className = 'save-indicator saving';
+  autoSaveTimer = setTimeout(() => {
+    const data = {
+      title: document.getElementById('title-input').value,
+      content: document.getElementById('edit-area').innerHTML,
+      tags: [...tags],
+      date: document.getElementById('pub-date').value,
+      excerpt: document.getElementById('excerpt').value,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem('article_backup', JSON.stringify(data));
+    document.getElementById('save-indicator').textContent = '自動保存済み ' + new Date().toLocaleTimeString('ja-JP', {hour:'2-digit',minute:'2-digit'});
+    document.getElementById('save-indicator').className = 'save-indicator saved';
+  }, 2000);
+}
+
+// === バックアップ復元 ===
+function restoreBackup() {
+  const raw = localStorage.getItem('article_backup');
+  if (!raw) return;
+  const data = JSON.parse(raw);
+  if (confirm(`${new Date(data.savedAt).toLocaleString('ja-JP')} の下書きを復元しますか？`)) {
+    document.getElementById('title-input').value = data.title || '';
+    document.getElementById('edit-area').innerHTML = data.content || '';
+    document.getElementById('pub-date').value = data.date || '';
+    document.getElementById('excerpt').value = data.excerpt || '';
+    tags = data.tags || [];
+    renderTags();
+    document.getElementById('backup-bar').classList.remove('visible');
+    updateWordCount();
+    showToast('下書きを復元しました');
+  }
+}
+
+// === 保存 ===
+function saveArticle() {
+  const title = document.getElementById('title-input').value.trim();
+  if (!title) { showToast('タイトルを入力してください'); return; }
+  const content = document.getElementById('edit-area').innerHTML.trim();
+  if (!content || content === '') { showToast('本文を入力してください'); return; }
+
+  const article = {
+    id: Date.now().toString(),
+    title,
+    content,
+    tags: [...tags],
+    date: document.getElementById('pub-date').value,
+    excerpt: document.getElementById('excerpt').value,
+    status: currentStatus,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  // ここでGitHub Contents APIに保存する処理
+  console.log('保存するデータ:', article);
+
+  // バックアップ削除
+  localStorage.removeItem('article_backup');
+
+  document.getElementById('save-indicator').textContent = '保存済み';
+  document.getElementById('save-indicator').className = 'save-indicator saved';
+  showToast(currentStatus === 'published' ? '記事を公開しました 🎉' : '下書きを保存しました');
+}
+
+function saveDraft() {
+  setStatus('draft');
+  saveArticle();
+}
+
+// === トースト ===
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// === キーボードショートカット ===
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 's') { e.preventDefault(); saveArticle(); }
+    if (e.key === 'k') { e.preventDefault(); openLinkModal(); }
+  }
+});
+
+// === モーダルクローズ（背景クリック） ===
+document.getElementById('link-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeLinkModal();
+});
+</script>
+</body>
+</html>
