@@ -29,24 +29,9 @@
     box-shadow: 0 24px 64px rgba(0,0,0,0.25);
   }
   @media (prefers-color-scheme: dark) { .card { background: #181818; color: #f0f0f0; } }
-
-  .icon {
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-    font-size: 26px;
-  }
-  .icon.loading { background: #fff1f1; }
-  .icon.success { background: #f0fdf4; }
-  .icon.error   { background: #fff1f1; }
-
   h2 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
   p  { font-size: 13px; color: #666; line-height: 1.6; }
   @media (prefers-color-scheme: dark) { p { color: #999; } }
-
   .spinner {
     width: 40px; height: 40px;
     border: 3px solid #ffe0e0;
@@ -56,70 +41,31 @@
     margin: 0 auto 20px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .progress-bar {
-    height: 3px;
-    background: #ffe0e0;
-    border-radius: 2px;
-    margin-top: 20px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    background: #cc2222;
-    border-radius: 2px;
-    width: 0%;
-    transition: width 0.3s ease;
-  }
-
+  .progress-bar { height: 3px; background: #ffe0e0; border-radius: 2px; margin-top: 20px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #cc2222; border-radius: 2px; width: 0%; transition: width 0.4s ease; }
   .user-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #fafafa;
-    border: 1px solid #e8e8e8;
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin: 16px 0 0;
-    text-align: left;
+    display: flex; align-items: center; gap: 12px;
+    background: #fafafa; border: 1px solid #e8e8e8;
+    border-radius: 10px; padding: 12px 14px; margin: 16px 0 0; text-align: left;
   }
-  @media (prefers-color-scheme: dark) {
-    .user-info { background: #222; border-color: #333; }
-  }
+  @media (prefers-color-scheme: dark) { .user-info { background: #222; border-color: #333; } }
   .user-avatar {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    background: #cc2222;
-    color: #fff;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #cc2222; color: #fff;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 16px;
-    overflow: hidden; flex-shrink: 0;
+    font-weight: 700; font-size: 16px; overflow: hidden; flex-shrink: 0;
   }
   .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .user-name { font-size: 14px; font-weight: 600; }
+  .user-name  { font-size: 14px; font-weight: 600; }
   .user-email { font-size: 12px; color: #888; }
-
   .btn {
-    display: inline-block;
-    margin-top: 16px;
-    padding: 10px 24px;
-    background: #cc2222;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    text-decoration: none;
-    transition: background 0.15s;
+    display: inline-block; margin-top: 16px; padding: 10px 24px;
+    background: #cc2222; color: #fff; border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: inherit; text-decoration: none; transition: background 0.15s;
   }
   .btn:hover { background: #aa1818; }
-  .btn-secondary {
-    background: none;
-    color: #cc2222;
-    border: 1.5px solid #cc2222;
-  }
+  .btn-secondary { background: none; color: #cc2222; border: 1.5px solid #cc2222; }
   .btn-secondary:hover { background: #fff1f1; }
 </style>
 </head>
@@ -132,19 +78,15 @@
 </div>
 
 <script>
-// JWT の payload をデコード（署名検証なし・参照用）
 function decodeJwt(token) {
   try {
     const payload = token.split('.')[1];
-    const decoded = atob(payload.replace(/-/g,'+').replace(/_/g,'/'));
-    return JSON.parse(decoded);
+    return JSON.parse(atob(payload.replace(/-/g,'+').replace(/_/g,'/')));
   } catch { return null; }
 }
 
-// URLハッシュからOAuthトークンを取得
 function parseHash() {
-  const hash = window.location.hash.substring(1);
-  const params = new URLSearchParams(hash);
+  const params = new URLSearchParams(window.location.hash.substring(1));
   return {
     accessToken: params.get('access_token'),
     idToken:     params.get('id_token'),
@@ -157,18 +99,16 @@ function setProgress(pct) {
   document.getElementById('progress').style.width = pct + '%';
 }
 
-function showError(msg, showRetry = true) {
+function showError(msg) {
   document.getElementById('spinner').style.display = 'none';
   document.getElementById('title').textContent = 'ログインできませんでした';
   document.getElementById('desc').textContent = msg;
   document.getElementById('progress').parentElement.style.display = 'none';
-  if (showRetry) {
-    const btn = document.createElement('a');
-    btn.href = 'index.html';
-    btn.className = 'btn btn-secondary';
-    btn.textContent = '← ログイン画面に戻る';
-    document.getElementById('card').appendChild(btn);
-  }
+  const btn = document.createElement('a');
+  btn.href = 'index.html';        // ← 必ずログイン画面に戻す
+  btn.className = 'btn btn-secondary';
+  btn.textContent = '← ログイン画面に戻る';
+  document.getElementById('card').appendChild(btn);
 }
 
 function showSuccess(name, email, picture) {
@@ -176,12 +116,8 @@ function showSuccess(name, email, picture) {
   document.getElementById('progress').parentElement.style.display = 'none';
   document.getElementById('title').textContent = 'ログイン完了！';
   document.getElementById('desc').textContent = 'エディターに移動します...';
-
   const userInfo = document.createElement('div');
   userInfo.className = 'user-info';
-  const avatar = picture
-    ? `<img src="${picture}" alt="${name}">`
-    : name.charAt(0).toUpperCase();
   userInfo.innerHTML = `
     <div class="user-avatar">${picture ? `<img src="${picture}" alt="">` : name.charAt(0)}</div>
     <div>
@@ -191,23 +127,21 @@ function showSuccess(name, email, picture) {
   document.getElementById('card').appendChild(userInfo);
 }
 
-// === メイン処理 ===
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener('DOMContentLoaded', () => {
   setProgress(20);
-
   const { accessToken, idToken, state, error } = parseHash();
 
-  // エラー返却
+  // Googleからエラーが返ってきた場合
   if (error) {
     showError(error === 'access_denied'
       ? 'Googleログインがキャンセルされました。'
-      : `Googleからエラーが返されました: ${error}`);
+      : `エラーが発生しました: ${error}`);
     return;
   }
 
-  // トークンが無い
+  // id_tokenが無い（直接アクセス等）
   if (!idToken) {
-    showError('認証トークンが取得できませんでした。もう一度お試しください。');
+    showError('認証トークンがありません。ログイン画面からやり直してください。');
     return;
   }
 
@@ -217,13 +151,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   const savedState = sessionStorage.getItem('oauth_state');
   sessionStorage.removeItem('oauth_state');
   if (!savedState || savedState !== state) {
-    showError('セキュリティエラー：不正なリクエストの可能性があります。');
+    showError('セキュリティエラー：不正なリクエストです。');
     return;
   }
 
   setProgress(70);
 
-  // id_token をデコードしてユーザー情報を取得
+  // id_token デコード
   const payload = decodeJwt(idToken);
   if (!payload) {
     showError('トークンの解析に失敗しました。');
@@ -238,23 +172,24 @@ window.addEventListener('DOMContentLoaded', async () => {
       BLOG_CONFIG.ALLOWED_EMAIL &&
       BLOG_CONFIG.ALLOWED_EMAIL !== 'your-email@gmail.com' &&
       email !== BLOG_CONFIG.ALLOWED_EMAIL) {
-    showError(`このアカウント（${email}）はアクセス権がありません。`);
-    // ログイン失敗をindex.htmlに通知
+    showError(`このアカウント（${email}）にはアクセス権がありません。`);
+    // 2.5秒後にログイン画面へ（editor.htmlには飛ばない）
     setTimeout(() => { window.location.href = 'index.html?error=unauthorized'; }, 2500);
     return;
   }
 
   setProgress(100);
 
-  // セッション保存（有効期限はGoogleのトークン期限 or 8時間のどちらか短い方）
+  // セッション保存
   const expiresAt = Math.min(
     (exp || 0) * 1000,
     Date.now() + 8 * 60 * 60 * 1000
   );
-  const session = { email, name, picture, accessToken, idToken, expiresAt };
-  sessionStorage.setItem('admin_session', JSON.stringify(session));
+  sessionStorage.setItem('admin_session', JSON.stringify(
+    { email, name, picture, accessToken, idToken, expiresAt }
+  ));
 
-  // URLのハッシュをクリア（トークンをURLに残さない）
+  // URLからハッシュを消す（トークンを残さない）
   history.replaceState(null, '', window.location.pathname);
 
   showSuccess(name, email, picture);
