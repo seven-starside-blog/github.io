@@ -166,7 +166,13 @@
     padding: 8px 12px;
     background: var(--gray-50);
     border-bottom: 1px solid var(--border);
+    border-top: 1px solid var(--border);
     flex-wrap: wrap;
+    /* ヘッダー(52px)直下に固定 */
+    position: sticky;
+    top: 52px;
+    z-index: 50;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
   }
   .toolbar-group {
     display: flex;
