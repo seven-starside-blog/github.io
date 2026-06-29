@@ -1,22 +1,17 @@
 {
-  "name": "seven-starside",
+  "name": "ナナボシサイド",
   "tagline": "ブログ管理人",
-  "avatar": "",
   "intro": "<p>こんにちは！このブログを運営している管理人です。</p><p>日々の出来事や趣味・関心のあることを自由に書いています。読んでいただけたら嬉しいです。</p>",
   "profile": [
-    { "label": "ハンドル名", "value": "seven-starside" },
-    { "label": "好きなこと", "value": "ブログを書くこと、読書、散歩" },
-    { "label": "このブログについて", "value": "日々の出来事や考えたことを気ままに綴っています" }
+    {
+      "label": "ハンドル名",
+      "value": "ナナボシサイド"
+    },
+    {
+      "label": "趣味",
+      "value": "乗り鉄"
+    }
   ],
-  "sns": [
-    { "service": "x", "label": "X (Twitter)", "url": "" },
-    { "service": "instagram", "label": "Instagram", "url": "" },
-    { "service": "github", "label": "GitHub", "url": "" },
-    { "service": "youtube", "label": "YouTube", "url": "" },
-    { "service": "tiktok", "label": "TikTok", "url": "" },
-    { "service": "bluesky", "label": "Bluesky", "url": "" },
-    { "service": "note", "label": "note", "url": "" },
-    { "service": "other1", "label": "", "url": "" }
-  ],
-  "updatedAt": ""
+  "sns": [],
+  "updatedAt": "2026-06-29T20:11:12.557Z"
 }
