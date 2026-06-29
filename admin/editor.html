@@ -1203,8 +1203,9 @@ async function loadExistingArticle(id) {
     editingArticleSha = sha;
     const article = allArticles.find(a => a.id === id);
     if (!article) {
-      showToast('記事が見つかりませんでした');
+      showToast('記事が見つかりませんでした（ID: ' + id + '）');
       document.getElementById('save-indicator').textContent = '読み込み失敗';
+      document.getElementById('save-indicator').className = 'save-indicator';
       return;
     }
     // フォームに値をセット
@@ -1230,8 +1231,10 @@ async function loadExistingArticle(id) {
       document.getElementById('save-indicator').textContent = '';
     }, 2000);
   } catch(e) {
-    showToast('記事の読み込みに失敗しました');
-    document.getElementById('save-indicator').textContent = '読み込み失敗';
+    console.error('記事読み込み失敗:', e);
+    showToast('記事の読み込みに失敗しました: ' + e.message);
+    document.getElementById('save-indicator').textContent = '読み込み失敗: ' + e.message;
+    document.getElementById('save-indicator').className = 'save-indicator';
   }
 }
 
