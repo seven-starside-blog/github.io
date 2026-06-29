@@ -118,8 +118,8 @@
 <div class="page-body">
   <!-- タブ -->
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showTab('articles')">📝 記事一覧</button>
-    <button class="nav-tab" onclick="showTab('profile')">👤 自己紹介</button>
+    <button class="nav-tab active" onclick="showTab('articles', this)">📝 記事一覧</button>
+    <button class="nav-tab" onclick="showTab('profile', this)">👤 自己紹介</button>
   </div>
 
   <!-- 記事一覧タブ -->
@@ -211,11 +211,11 @@ if (session) {
 }
 
 // タブ切替
-function showTab(name) {
+function showTab(name, btn) {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(`tab-${name}`).classList.add('active');
-  event.target.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
 }
 
 // =====================================================
@@ -483,8 +483,7 @@ async function saveProfile() {
   } catch(e) {
     statusEl.textContent = '保存失敗: ' + e.message;
     statusEl.className = 'saving-indicator saving';
-    alert('プロフィールの保存に失敗しました:
-' + e.message);
+    alert('プロフィールの保存に失敗しました:\n' + e.message);
   } finally {
     if (btn) btn.disabled = false;
   }
