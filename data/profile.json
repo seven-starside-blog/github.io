@@ -10,14 +10,12 @@
     {
       "label": "趣味",
       "value": "乗り鉄"
-    }
-  ],
-  "sns": [
+    },
     {
-      "service": "other",
-      "label": "Gmail",
-      "url": "seven.starside.contact@gmail.com"
+      "label": "連絡先",
+      "value": "seven.starside.contact@gmail.com"
     }
   ],
-  "updatedAt": "2026-06-29T20:39:07.191Z"
+  "sns": [],
+  "updatedAt": "2026-06-29T20:40:11.814Z"
 }
