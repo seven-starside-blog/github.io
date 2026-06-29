@@ -16,7 +16,6 @@ const BLOG_CONFIG = {
   // ★★ 必須：ここを自分のGmailに変えないとログイン制限が効きません ★★
   // ここが 'your-email@gmail.com' のままだと誰でもログインできてしまいます
   ALLOWED_EMAIL: 'seven.starside.admin@gmail.com',
-};
 
   // ★★ Cloudflare WorkerのURL（デプロイ後に書き換え）
   // 例: 'https://blog-api.yourname.workers.dev'
