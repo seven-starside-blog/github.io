@@ -6,6 +6,7 @@
 <title>記事管理 | 管理画面</title>
 <script src="config.js"></script>
 <script src="auth-guard.js"></script>
+<script src="github-api.js"></script>
 <style>
   :root {
     --red-900:#5a0808;--red-700:#aa1818;--red-600:#cc2222;--red-400:#f06060;
@@ -222,14 +223,16 @@ function showTab(name) {
 // =====================================================
 let allArticles = [];
 let deleteTargetId = null;
+let articlesSha = null;  // GitHub API用SHA
+let profileSha  = null;
 
 async function loadArticles() {
   try {
-    const base = typeof BLOG_CONFIG !== 'undefined' ? `/${BLOG_CONFIG.GITHUB_REPO}` : '';
-    const res = await fetch(`${base}/data/articles.json?_=${Date.now()}`);
-    const json = await res.json();
-    allArticles = json.articles || [];
+    const { articles, sha } = await GitHubAPI.getArticles();
+    allArticles = articles;
+    articlesSha = sha;
   } catch(e) {
+    console.warn('記事取得失敗（ローカル確認中は正常）:', e.message);
     allArticles = [];
   }
   updateCounts();
@@ -303,21 +306,29 @@ function closeDeleteModal() {
 }
 async function confirmDelete() {
   if (!deleteTargetId) return;
-  allArticles = allArticles.filter(a => a.id !== deleteTargetId);
-  await saveArticlesJson(allArticles);
-  closeDeleteModal();
-  updateCounts();
-  filterArticles();
+  const btn = document.querySelector('#delete-modal .btn-danger');
+  btn.textContent = '削除中...';
+  btn.disabled = true;
+  try {
+    allArticles = allArticles.filter(a => a.id !== deleteTargetId);
+    await saveArticlesJson(allArticles);
+    closeDeleteModal();
+    updateCounts();
+    filterArticles();
+  } catch(e) {
+    alert(e.message);
+    btn.textContent = '削除する';
+    btn.disabled = false;
+  }
 }
 
 async function saveArticlesJson(articles) {
-  // GitHub Contents API で保存（PAT必要）
-  // ローカルテスト中はコンソールに出力
-  console.log('保存:', articles);
-  // TODO: GitHub API実装後にここを有効化
-  // const base = `/${BLOG_CONFIG.GITHUB_REPO}`;
-  // await githubSave('data/articles.json', JSON.stringify({ articles }, null, 2));
-  alert('保存しました（GitHub API連携後に反映されます）');
+  try {
+    const result = await GitHubAPI.saveArticles(articles, articlesSha);
+    articlesSha = result.sha;
+  } catch(e) {
+    throw new Error('保存に失敗しました: ' + e.message);
+  }
 }
 
 document.getElementById('delete-modal').addEventListener('click', e => {
@@ -346,10 +357,11 @@ let profileData = null;
 
 async function loadProfile() {
   try {
-    const base = typeof BLOG_CONFIG !== 'undefined' ? `/${BLOG_CONFIG.GITHUB_REPO}` : '';
-    const res = await fetch(`${base}/data/profile.json?_=${Date.now()}`);
-    profileData = await res.json();
+    const { profile, sha } = await GitHubAPI.getProfile();
+    profileData = profile;
+    profileSha  = sha;
   } catch(e) {
+    console.warn('プロフィール取得失敗（ローカル確認中は正常）:', e.message);
     profileData = { name:'', tagline:'', intro:'', profile:[], sns:[] };
   }
   renderProfileForm();
@@ -444,15 +456,25 @@ function collectProfile() {
 async function saveProfile() {
   const data = collectProfile();
   const statusEl = document.getElementById('profile-save-status');
+  const btn = event?.target;
   statusEl.textContent = '保存中...';
   statusEl.className = 'saving-indicator saving';
-  console.log('保存するプロフィール:', data);
-  // TODO: GitHub API実装後に有効化
-  await new Promise(r => setTimeout(r, 500));
-  statusEl.textContent = '保存しました ✓';
-  statusEl.className = 'saving-indicator saved';
-  setTimeout(() => { statusEl.textContent = ''; }, 3000);
-  alert('プロフィールを保存しました（GitHub API連携後に反映されます）');
+  if (btn) btn.disabled = true;
+  try {
+    const result = await GitHubAPI.saveProfile(data, profileSha);
+    profileSha = result.sha;
+    profileData = data;
+    statusEl.textContent = '保存しました ✓';
+    statusEl.className = 'saving-indicator saved';
+    setTimeout(() => { statusEl.textContent = ''; }, 3000);
+  } catch(e) {
+    statusEl.textContent = '保存失敗: ' + e.message;
+    statusEl.className = 'saving-indicator saving';
+    alert('プロフィールの保存に失敗しました:
+' + e.message);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 function escHtml(s) {
