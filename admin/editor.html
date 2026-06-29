@@ -227,54 +227,83 @@
   }
 
   /* === エディター本体 === */
-  #editor {
+  /* ===== エディター本文（閲覧画面と完全一致） ===== */
+  #edit-area {
     min-height: 420px;
-    padding: 16px;
+    padding: 20px 24px;
     outline: none;
-    font-size: 15px;
-    line-height: 1.8;
+    font-size: 16px;
+    line-height: 1.9;
     color: var(--text);
     font-family: var(--font);
   }
-  #editor:empty::before {
+  #edit-area:empty::before {
     content: '本文を入力してください…';
     color: var(--gray-300);
     pointer-events: none;
+    display: block;
   }
-  #editor h1 { font-size: 22px; font-weight: 700; margin: 16px 0 8px; color: var(--text); }
-  #editor h2 { font-size: 18px; font-weight: 700; margin: 14px 0 6px; border-bottom: 2px solid var(--red-200); padding-bottom: 4px; color: var(--text); }
-  #editor h3 { font-size: 15px; font-weight: 700; margin: 12px 0 4px; color: var(--text); }
-  #editor p { margin: 0 0 8px; }
-  #editor strong { color: var(--accent); }
-  #editor em { font-style: italic; }
-  #editor blockquote {
+  /* 見出し */
+  #edit-area h1 { font-size: 24px; font-weight: 700; margin: 32px 0 12px; color: var(--text); }
+  #edit-area h2 {
+    font-size: 20px; font-weight: 700; margin: 28px 0 10px;
+    padding-bottom: 6px; border-bottom: 2px solid var(--red-200);
+    color: var(--text);
+  }
+  #edit-area h3 { font-size: 17px; font-weight: 700; margin: 20px 0 8px; color: var(--text); }
+  /* 段落・インライン */
+  #edit-area p   { margin: 0 0 16px; }
+  #edit-area strong { color: var(--accent); font-weight: 700; }
+  #edit-area em  { font-style: italic; }
+  #edit-area a   { color: var(--accent); text-decoration: underline; }
+  #edit-area a:hover { opacity: 0.8; }
+  /* 引用 */
+  #edit-area blockquote {
     border-left: 3px solid var(--red-400);
-    padding: 4px 12px;
-    margin: 8px 0;
-    color: var(--text-muted);
+    padding: 8px 16px;
+    margin: 16px 0;
     background: var(--red-50);
-    border-radius: 0 4px 4px 0;
+    color: var(--text-muted);
+    border-radius: 0 6px 6px 0;
   }
-  #editor code {
+  /* コード */
+  #edit-area code {
     background: var(--gray-100);
     border: 1px solid var(--gray-200);
-    border-radius: 3px;
-    padding: 1px 5px;
-    font-family: 'Menlo', monospace;
-    font-size: 12px;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: 'Menlo', 'Consolas', monospace;
+    font-size: 13px;
   }
-  #editor pre {
+  #edit-area pre {
     background: var(--gray-900);
     color: #e0e0e0;
-    padding: 12px;
-    border-radius: 6px;
+    padding: 16px;
+    border-radius: 8px;
     overflow-x: auto;
-    margin: 8px 0;
+    margin: 16px 0;
+    /* contenteditable内でもフォントを維持 */
+    font-family: 'Menlo', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre;
   }
-  #editor pre code { background: none; border: none; color: inherit; font-size: 13px; }
-  #editor ul, #editor ol { padding-left: 20px; margin: 4px 0 8px; }
-  #editor a { color: var(--accent); text-decoration: underline; }
-  #editor img { max-width: 100%; border-radius: 6px; margin: 8px 0; }
+  #edit-area pre code { background: none; border: none; color: inherit; font-size: inherit; padding: 0; }
+  /* リスト */
+  #edit-area ul, #edit-area ol { padding-left: 24px; margin: 8px 0 16px; }
+  #edit-area li { margin-bottom: 4px; }
+  /* 画像・区切り */
+  #edit-area img { border-radius: 8px; margin: 16px 0; max-width: 100%; display: block; }
+  #edit-area hr  { border: none; border-top: 2px solid var(--red-100); margin: 24px 0; }
+  /* テーブル */
+  #edit-area table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  #edit-area th, #edit-area td { padding: 10px 12px; border: 1px solid var(--border); text-align: left; }
+  #edit-area th { background: var(--gray-100); font-weight: 600; }
+  /* OGPカード（挿入後の見た目） */
+  #edit-area .ogp-card { pointer-events: none; }
+  /* contenteditable のデフォルトスタイルリセット */
+  #edit-area:focus { outline: none; }
+  #edit-area div { margin: 0 0 8px; }
 
   .word-count {
     padding: 6px 16px;
@@ -940,7 +969,7 @@ function closeLinkModal() {
   document.getElementById('link-modal').classList.remove('open');
 }
 
-// OGP取得（allorigins.win プロキシ経由でCORSを回避）
+// OGP取得（Cloudflare Worker経由）
 async function fetchOgp() {
   const url = document.getElementById('link-url').value.trim();
   if (!url || !url.startsWith('http')) {
@@ -956,25 +985,7 @@ async function fetchOgp() {
   ogpData = null;
 
   try {
-    const proxyUrl = `https://allorigins.win/get?disableCache=true&url=${encodeURIComponent(url)}`;
-    const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) throw new Error('fetch failed');
-    const json = await res.json();
-    const html = json.contents || '';
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const getMeta = (prop) =>
-      doc.querySelector(`meta[property="${prop}"]`)?.content ||
-      doc.querySelector(`meta[name="${prop}"]`)?.content || '';
-
-    ogpData = {
-      url,
-      title: getMeta('og:title') || doc.title || url,
-      desc:  getMeta('og:description') || getMeta('description') || '',
-      image: getMeta('og:image') || '',
-      site:  getMeta('og:site_name') || new URL(url).hostname,
-    };
+    ogpData = await GitHubAPI.fetchOgp(url);
 
     // プレビュー表示
     document.getElementById('ogp-title').textContent = ogpData.title;
@@ -990,17 +1001,16 @@ async function fetchOgp() {
     }
     document.getElementById('ogp-preview').style.display = 'block';
     document.getElementById('ogp-loading').style.display = 'none';
-    document.getElementById('btn-insert-link').disabled  = false;
-    document.getElementById('btn-insert-link').style.opacity = '1';
 
   } catch(e) {
     document.getElementById('ogp-loading').style.display = 'none';
-    showOgpError('OGP情報の取得に失敗しました。URLを確認するか、テキストリンクで挿入してください。');
+    showOgpError('OGP情報の取得に失敗しました: ' + e.message);
     // 取得失敗でもURLは有効なので挿入は許可
-    document.getElementById('btn-insert-link').disabled  = false;
+  } finally {
+    document.getElementById('ogp-fetch-btn').disabled   = false;
+    document.getElementById('btn-insert-link').disabled = false;
     document.getElementById('btn-insert-link').style.opacity = '1';
   }
-  document.getElementById('ogp-fetch-btn').disabled = false;
 }
 
 function showOgpError(msg) {
