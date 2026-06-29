@@ -12,6 +12,12 @@
       "value": "乗り鉄"
     }
   ],
-  "sns": [],
-  "updatedAt": "2026-06-29T20:11:21.715Z"
+  "sns": [
+    {
+      "service": "other",
+      "label": "Gmail",
+      "url": "seven.starside.contact@gmail.com"
+    }
+  ],
+  "updatedAt": "2026-06-29T20:39:00.194Z"
 }
