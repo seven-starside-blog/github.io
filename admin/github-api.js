@@ -1,10 +1,10 @@
 /**
  * admin/github-api.js
  * Cloudflare Worker経由でGitHub Contents APIを叩く共通ライブラリ
- * editor.html / dashboard.html から <script src="github-api.js"> で読み込む
  */
 
 const GitHubAPI = (() => {
+
   function workerUrl() {
     if (typeof BLOG_CONFIG === 'undefined' || !BLOG_CONFIG.WORKER_URL ||
         BLOG_CONFIG.WORKER_URL.includes('YOUR_WORKER')) {
@@ -13,29 +13,21 @@ const GitHubAPI = (() => {
     return BLOG_CONFIG.WORKER_URL.replace(/\/$/, '');
   }
 
-  /**
-   * ファイルを取得する
-   * @param {string} path  例: 'data/articles.json'
-   * @returns {{ content: any, sha: string }}
-   */
+  // ─── GET ──────────────────────────────────────────────────────────
   async function getFile(path) {
-    const res = await fetch(`${workerUrl()}/api/file?path=${encodeURIComponent(path)}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const url = `${workerUrl()}/api/file?path=${encodeURIComponent(path)}`;
+    // GETにContent-Typeを付けるとプリフライトが発生して失敗する環境があるため除外
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) {
+      let msg = `GET失敗 (${res.status})`;
+      try { const d = await res.json(); msg = d.error || msg; } catch {}
+      throw new Error(msg);
+    }
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `GET失敗 (${res.status})`);
     return data; // { content, sha }
   }
 
-  /**
-   * ファイルを保存する（新規・更新どちらも）
-   * @param {string} path     例: 'data/articles.json'
-   * @param {any}    content  保存するデータ（オブジェクトはJSON化される）
-   * @param {string} [sha]    既存ファイルのSHA（更新時。省略時はWorker側で自動取得）
-   * @param {string} [message] コミットメッセージ
-   * @returns {{ ok: boolean, sha: string }}
-   */
+  // ─── PUT ──────────────────────────────────────────────────────────
   async function putFile(path, content, sha = null, message = null) {
     const body = { path, content, sha, message };
     const res = await fetch(`${workerUrl()}/api/file`, {
@@ -43,44 +35,32 @@ const GitHubAPI = (() => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+    if (!res.ok) {
+      let msg = `PUT失敗 (${res.status})`;
+      try { const d = await res.json(); msg = d.error || msg; } catch {}
+      throw new Error(msg);
+    }
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `PUT失敗 (${res.status})`);
     return data; // { ok, sha }
   }
 
-  /**
-   * articles.json を取得する
-   * @returns {{ articles: Array, sha: string }}
-   */
+  // ─── 記事 ─────────────────────────────────────────────────────────
   async function getArticles() {
     const { content, sha } = await getFile('data/articles.json');
-    return { articles: content.articles || [], sha };
+    return { articles: (content && content.articles) ? content.articles : [], sha };
   }
 
-  /**
-   * articles.json を保存する
-   * @param {Array}  articles 全記事配列
-   * @param {string} [sha]    現在のSHA（省略可）
-   */
   async function saveArticles(articles, sha = null) {
     const message = `記事を更新 (${new Date().toLocaleString('ja-JP')})`;
     return await putFile('data/articles.json', { articles }, sha, message);
   }
 
-  /**
-   * profile.json を取得する
-   * @returns {{ profile: object, sha: string }}
-   */
+  // ─── プロフィール ──────────────────────────────────────────────────
   async function getProfile() {
     const { content, sha } = await getFile('data/profile.json');
-    return { profile: content, sha };
+    return { profile: content || {}, sha };
   }
 
-  /**
-   * profile.json を保存する
-   * @param {object} profile
-   * @param {string} [sha]
-   */
   async function saveProfile(profile, sha = null) {
     const message = `プロフィールを更新 (${new Date().toLocaleString('ja-JP')})`;
     return await putFile('data/profile.json', profile, sha, message);
