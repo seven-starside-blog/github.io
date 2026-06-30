@@ -602,8 +602,48 @@
 
   /* レスポンシブ */
   @media (max-width: 800px) {
-    .layout { grid-template-columns: 1fr; }
+    .layout { grid-template-columns: 1fr; padding: 12px; gap: 12px; }
     .sidebar { order: -1; }
+  }
+
+  @media (max-width: 600px) {
+    header{ padding: 0 12px; gap: 10px; }
+    header .logo{ font-size: 13px; }
+    header .page-title{ display:none; }
+    .user-info span{ display:none; }
+    .user-info button{ font-size: 10px; padding: 3px 6px; }
+    .avatar{ width: 24px; height: 24px; }
+
+    #title-input{ font-size: 18px; }
+
+    /* ツールバー：折り返し＋アイコン主体で省スペース化 */
+    .toolbar{ padding: 6px 8px; gap: 1px; position: sticky; top: 44px; }
+    .tb-btn{ width: 28px; height: 28px; }
+    .tb-select{ font-size: 11px; padding: 0 4px; max-width: 84px; }
+    .toolbar-divider{ margin: 0 3px; }
+
+    #edit-area{ padding: 14px 16px; font-size: 15px; }
+    .word-count{ padding: 6px 12px; font-size: 10px; gap: 8px; }
+
+    /* サイドバーのカード */
+    .card-body{ padding: 12px; }
+    .status-group{ gap: 4px; }
+    .status-btn{ font-size: 11px; padding: 6px; }
+    .btn-primary{ padding: 10px; font-size: 13px; }
+
+    /* タグ */
+    .tags-container{ padding: 5px 6px; }
+    .tag-chip{ font-size: 10.5px; }
+
+    /* モーダル（リンク挿入） */
+    .modal{ width: 92vw; padding: 16px; }
+    .modal h3{ font-size: 13px; }
+
+    /* OGPカードプレビュー */
+    #ogp-preview img{ width: 64px !important; height: 56px !important; }
+
+    /* トースト */
+    .toast{ left: 12px; right: 12px; bottom: 12px; text-align: center; }
   }
 </style>
 </head>
@@ -1214,8 +1254,11 @@ function showOgpError(msg) {
 }
 
 function insertLink() {
+  // サイト内リンクはlink-url欄を使わないため、urlチェックを後回しにする
   const url = document.getElementById('link-url').value.trim();
-  if (!url) { closeLinkModal(); return; }
+
+  if (linkType !== 'internal' && !url) { closeLinkModal(); return; }
+  if (linkType === 'internal' && !selectedInternalArticle) { return; }
 
   document.getElementById('edit-area').focus();
   if (savedRange) {
