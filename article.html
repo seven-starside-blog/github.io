@@ -160,6 +160,27 @@
   .ogp-card-desc  { font-size: 12px; color: rgba(255,255,255,0.75) !important; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.5; margin-bottom: 4px; }
   .article-body .ogp-card-site,
   .ogp-card-site  { font-size: 11px; color: rgba(255,255,255,0.45) !important; }
+  @media (max-width: 600px) {
+    .article-hero { padding: 32px 16px 28px; }
+    .article-hero h1 { font-size: 22px; }
+    .article-hero .meta { font-size: 11px; }
+    .article-thumb { max-height: 220px; }
+    .article-layout { padding: 24px 0 40px; gap: 24px; }
+    .article-body { font-size: 15px; }
+    .article-body h1 { font-size: 20px; }
+    .article-body h2 { font-size: 18px; }
+    .article-body h3 { font-size: 16px; }
+    .article-body pre { padding: 12px; font-size: 12.5px; }
+
+    /* 前後ナビ：2カラム→1カラム */
+    .article-nav { grid-template-columns: 1fr; gap: 8px; }
+    .nav-btn.next { text-align: left; }
+
+    .recommend-card { padding: 10px 12px; }
+    .recommend-card .thumb-mini { width: 52px; height: 40px; }
+
+    .sidebar-card { padding: 14px; }
+  }
 </style>
 </head>
 <body>
