@@ -1220,6 +1220,8 @@ async function fetchOgp() {
 
   try {
     ogpData = await GitHubAPI.fetchOgp(url);
+    // 概要が長すぎる場合は切り詰める（内部リンクカードと統一）
+    if (ogpData.desc) ogpData.desc = truncateText(ogpData.desc, 90);
 
     // プレビュー表示
     document.getElementById('ogp-title').textContent = ogpData.title;
@@ -1253,6 +1255,14 @@ function showOgpError(msg) {
   el.style.display = 'block';
 }
 
+// 文字数で切り詰めて末尾に...を付ける（単語の途中で切れないよう日本語にも配慮）
+function truncateText(text, maxLen) {
+  if (!text) return text;
+  const plain = text.trim();
+  if (plain.length <= maxLen) return plain;
+  return plain.slice(0, maxLen).trim() + '…';
+}
+
 function insertLink() {
   // サイト内リンクはlink-url欄を使わないため、urlチェックを後回しにする
   const url = document.getElementById('link-url').value.trim();
@@ -1272,7 +1282,7 @@ function insertLink() {
   if (linkType === 'card') {
     // OGPカード形式
     const title = ogpData?.title || url;
-    const desc  = ogpData?.desc  || '';
+    const desc  = truncateText(ogpData?.desc || '', 90);
     const site  = ogpData?.site  || new URL(url.startsWith('http') ? url : 'https://x').hostname;
     const image = ogpData?.image || '';
     html = `<div class="ogp-card-wrap" contenteditable="false">
@@ -1282,7 +1292,7 @@ function insertLink() {
     ${image ? `<img src="${image}" alt="" style="width:120px;min-height:80px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">` : ''}
     <div class="ogp-card-body" style="padding:12px 14px;min-width:0;flex:1;">
       <div class="ogp-card-title" style="font-size:14px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#cc2222;">${title}</div>
-      ${desc ? `<div class="ogp-card-desc" style="font-size:12px;color:rgba(255,255,255,0.75);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.5;margin-bottom:4px;">${desc}</div>` : ''}
+      ${desc ? `<div class="ogp-card-desc" style="font-size:12px;color:rgba(255,255,255,0.75);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;line-height:1.5;margin-bottom:4px;word-break:break-word;">${desc}</div>` : ''}
       <div class="ogp-card-site" style="font-size:11px;color:rgba(255,255,255,0.45);">${site}</div>
     </div>
   </a>
@@ -1293,7 +1303,7 @@ function insertLink() {
     const base = typeof BLOG_CONFIG !== 'undefined' ? '/' + BLOG_CONFIG.GITHUB_REPO : '';
     const articleUrl = `${base}/article.html?id=${selectedInternalArticle.id}`;
     const title   = selectedInternalArticle.title;
-    const excerpt = selectedInternalArticle.excerpt || '';
+    const excerpt = truncateText(selectedInternalArticle.excerpt || '', 90);
     const date    = selectedInternalArticle.date || '';
     const thumb   = selectedInternalArticle.thumbnail || '';
     html = `<div class="ogp-card-wrap" contenteditable="false">
@@ -1303,7 +1313,7 @@ function insertLink() {
     ${thumb ? `<img src="${thumb}" alt="" style="width:120px;min-height:80px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">` : ''}
     <div class="ogp-card-body" style="padding:12px 14px;min-width:0;flex:1;">
       <div class="ogp-card-title" style="font-size:14px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#cc2222;">${title}</div>
-      ${excerpt ? `<div class="ogp-card-desc" style="font-size:12px;color:rgba(255,255,255,0.75);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.5;margin-bottom:4px;">${excerpt}</div>` : ''}
+      ${excerpt ? `<div class="ogp-card-desc" style="font-size:12px;color:rgba(255,255,255,0.75);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;line-height:1.5;margin-bottom:4px;word-break:break-word;">${excerpt}</div>` : ''}
       <div class="ogp-card-site" style="font-size:11px;color:rgba(255,255,255,0.45);">📄 ${date ? date + '　' : ''}サイト内記事</div>
     </div>
   </a>
