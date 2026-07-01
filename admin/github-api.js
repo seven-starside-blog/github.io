@@ -78,5 +78,16 @@ const GitHubAPI = (() => {
     return await res.json(); // { url, title, desc, image, site }
   }
 
-  return { getFile, putFile, getArticles, saveArticles, getProfile, saveProfile, fetchOgp };
+  // ─── Sitemap更新 ──────────────────────────────────────────────────
+  async function updateSitemap(articles) {
+    const res = await fetch(`${workerUrl()}/api/sitemap`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ articles }),
+    });
+    // sitemapは失敗してもエラーを投げない（記事保存の成功を妨げないため）
+    if (!res.ok) console.warn('sitemap更新失敗:', res.status);
+  }
+
+  return { getFile, putFile, getArticles, saveArticles, getProfile, saveProfile, fetchOgp, updateSitemap };
 })();
