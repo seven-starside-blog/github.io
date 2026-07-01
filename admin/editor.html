@@ -962,6 +962,7 @@ function execCmd(cmd) {
 }
 
 // インラインstyle/classを子孫含め全除去するユーティリティ
+// スタイル・クラスを子孫ごと完全除去
 function stripStyles(el) {
   el.removeAttribute('style');
   el.removeAttribute('class');
@@ -972,47 +973,64 @@ function stripStyles(el) {
   return el;
 }
 
-// area直下の最上位ブロックノードを返す
-function getTopBlock(area) {
-  const sel = window.getSelection();
-  if (!sel || !sel.rangeCount) return null;
-  let node = sel.getRangeAt(0).commonAncestorContainer;
-  // テキストノードの場合は親へ
+// ノードをarea直下まで遡る
+function toTopBlock(node, area) {
+  if (!node || node === area) return null;
   if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
-  // area直下まで遡る
   while (node && node !== area && node.parentNode !== area) {
     node = node.parentNode;
   }
   return (node && node !== area) ? node : null;
 }
 
-// 選択範囲にまたがるarea直下のブロック一覧を返す
-function getSelectedTopBlocks(area) {
+// カーソル位置のブロック1つを返す（見出し用：行単位）
+function getCursorBlock(area) {
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount) return null;
+  return toTopBlock(sel.getRangeAt(0).startContainer, area);
+}
+
+// 選択範囲内のブロックを全て返す（p/blockquote/pre用：選択範囲全体）
+function getSelectedBlocks(area) {
   const sel = window.getSelection();
   if (!sel || !sel.rangeCount) return [];
   const range = sel.getRangeAt(0);
 
-  // 選択が1つのブロック内に収まるケース
-  const single = getTopBlock(area);
-  if (single) {
-    // rangeがそのノード内だけか確認
-    if (single.contains(range.startContainer) && single.contains(range.endContainer)) {
-      return [single];
-    }
-  }
+  const startBlock = toTopBlock(range.startContainer, area);
+  const endBlock   = toTopBlock(range.endContainer,   area);
 
-  // 複数ブロックにまたがる: area直下の子ノードのうち選択範囲と交差するものを収集
-  const blocks = [];
-  for (const child of area.childNodes) {
+  // 同じブロック or 選択がない（カーソルのみ）
+  if (!startBlock) return [];
+  if (startBlock === endBlock || range.collapsed) return [startBlock];
+
+  // startBlock〜endBlock の間にある全ブロックを収集
+  const result = [];
+  let found = false;
+  for (const child of Array.from(area.childNodes)) {
     if (child.nodeType === Node.TEXT_NODE) continue;
-    const childRange = document.createRange();
-    childRange.selectNode(child);
-    if (range.compareBoundaryPoints(Range.END_TO_START, childRange) < 0 &&
-        range.compareBoundaryPoints(Range.START_TO_END, childRange) > 0) {
-      blocks.push(child);
-    }
+    if (child === startBlock) found = true;
+    if (found) result.push(child);
+    if (child === endBlock) break;
   }
-  return blocks.length ? blocks : (single ? [single] : []);
+  return result.length ? result : [startBlock];
+}
+
+// ブロック1つを新タグに変換してカーソルを末尾に移す
+function convertBlock(node, tag, area) {
+  let newEl;
+  if (tag === 'pre') {
+    newEl = document.createElement('pre');
+    const code = document.createElement('code');
+    code.textContent = node.innerText || node.textContent || '';
+    newEl.appendChild(code);
+  } else {
+    newEl = document.createElement(tag);
+    // インラインHTML（太字・斜体等）はそのまま引き継ぐ
+    newEl.innerHTML = node.innerHTML || '';
+    stripStyles(newEl);
+  }
+  node.replaceWith(newEl);
+  return newEl;
 }
 
 function applyBlockStyle(tag) {
@@ -1023,42 +1041,33 @@ function applyBlockStyle(tag) {
   const sel = window.getSelection();
   if (!sel || !sel.rangeCount) return;
 
-  const blocks = getSelectedTopBlocks(area);
+  // 見出しはカーソル行1行のみ、それ以外は選択範囲全体
+  const isHeading = ['h1', 'h2', 'h3'].includes(tag);
+  const targets = isHeading ? (() => {
+    const b = getCursorBlock(area);
+    return b ? [b] : [];
+  })() : getSelectedBlocks(area);
 
-  if (!blocks.length) {
-    // カーソルがどこにもなければ新規挿入
-    if (tag === 'pre') {
-      document.execCommand('insertHTML', false, '<pre><code>コードを入力</code></pre>');
-    } else {
-      document.execCommand('insertHTML', false, `<${tag}><br></${tag}>`);
-    }
+  if (!targets.length) {
+    // area内にまだブロックがなければ新規挿入
+    const frag = tag === 'pre'
+      ? '<pre><code>コードを入力</code></pre>'
+      : `<${tag}><br></${tag}>`;
+    document.execCommand('insertHTML', false, frag);
     updateWordCount();
     return;
   }
 
-  // 選択範囲にまたがる全ブロックを変換
   let lastEl = null;
-  for (const node of blocks) {
-    if (tag === 'pre') {
-      const pre = document.createElement('pre');
-      const code = document.createElement('code');
-      code.textContent = node.innerText || node.textContent || '';
-      pre.appendChild(code);
-      node.replaceWith(pre);
-      lastEl = code;
-    } else {
-      const newEl = document.createElement(tag);
-      newEl.innerHTML = node.innerHTML || '';
-      stripStyles(newEl);
-      node.replaceWith(newEl);
-      lastEl = newEl;
-    }
+  for (const node of targets) {
+    lastEl = convertBlock(node, tag, area);
   }
 
   // カーソルを最後の要素の末尾へ
   if (lastEl) {
+    const target = lastEl.tagName === 'PRE' ? lastEl.querySelector('code') || lastEl : lastEl;
     const r = document.createRange();
-    r.selectNodeContents(lastEl);
+    r.selectNodeContents(target);
     r.collapse(false);
     sel.removeAllRanges();
     sel.addRange(r);
@@ -1599,6 +1608,9 @@ async function saveArticle() {
     // Worker経由でGitHubに保存
     const result = await GitHubAPI.saveArticles(allArticles, editingArticleSha);
     editingArticleSha = result.sha; // 新しいSHAを保持
+
+    // sitemap.xmlを非同期で更新（失敗しても記事保存には影響しない）
+    GitHubAPI.updateSitemap(allArticles).catch(e => console.warn('sitemap:', e.message));
 
     localStorage.removeItem('article_backup');
     document.getElementById('save-indicator').textContent = `保存済み ${new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}`;
