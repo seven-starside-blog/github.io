@@ -1341,13 +1341,32 @@ function insertLink() {
 document.getElementById('link-url').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); fetchOgp(); } });
 
 // === 画像挿入 ===
-function insertImage() {
-  const url = prompt('画像URLを入力してください：');
-  if (url) {
-    document.getElementById('edit-area').focus();
-    document.execCommand('insertHTML', false, `<img src="${url}" alt="画像" style="max-width:100%;border-radius:6px;">`);
-    updateWordCount();
+// GoogleドライブのURLを直接表示可能な形式に変換
+function normalizeImageUrl(url) {
+  if (!url) return url;
+  // パターン1: /file/d/FILE_ID/view
+  const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m1) return `https://drive.google.com/uc?export=view&id=${m1[1]}`;
+  // パターン2: uc?export=view&id=FILE_ID（そのまま使えるが念のため正規化）
+  const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m2 && url.includes('drive.google.com')) {
+    return `https://drive.google.com/uc?export=view&id=${m2[1]}`;
   }
+  // パターン3: open?id=FILE_ID
+  const m3 = url.match(/open\?id=([a-zA-Z0-9_-]+)/);
+  if (m3) return `https://drive.google.com/uc?export=view&id=${m3[1]}`;
+  return url;
+}
+
+function insertImage() {
+  const rawUrl = prompt('画像URLを入力してください（GoogleドライブのURLも可）：');
+  if (!rawUrl) return;
+  const url = normalizeImageUrl(rawUrl.trim());
+  document.getElementById('edit-area').focus();
+  document.execCommand('insertHTML', false,
+    '<img src="' + url + '" alt="画像" style="max-width:100%;border-radius:6px;">'
+  );
+  updateWordCount();
 }
 
 // === タグ管理 ===
