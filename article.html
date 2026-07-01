@@ -3,7 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>記事 | seven-starside-blog</title>
+<title>記事 | ナナボシサイド★ブログ</title>
+<meta name="description" content="ナナボシサイド★ブログの記事です。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="記事 | ナナボシサイド★ブログ">
+<meta property="og:description" content="ナナボシサイド★ブログの記事です。">
+<meta property="og:url" content="https://seven-starside-blog.github.io/seven-starside-blog/article.html">
+<meta property="og:site_name" content="ナナボシサイド★ブログ">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="記事 | ナナボシサイド★ブログ">
+<meta name="twitter:description" content="ナナボシサイド★ブログの記事です。">
+<link rel="canonical" href="https://seven-starside-blog.github.io/seven-starside-blog/article.html">
 <link rel="stylesheet" href="assets/style.css">
 <script src="admin/config.js"></script>
 <style>
@@ -140,11 +151,33 @@
   .sidebar { display: flex; flex-direction: column; gap: 20px; }
   .sidebar-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
   .sidebar-card h3 { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 12px; letter-spacing: 0.03em; }
+  /* ── 目次：サイドバー（PC）── */
   .toc-list { list-style: none; padding: 0; font-size: 13px; }
   .toc-list li { padding: 4px 0; border-bottom: 1px solid var(--border); }
   .toc-list li:last-child { border-bottom: none; }
   .toc-list a { color: var(--text-muted); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .toc-list a:hover { color: var(--accent); }
+  /* 「概要」タブ（PC目次の先頭） */
+  .toc-overview-item a { color: var(--accent); font-weight: 600; }
+  /* ── 目次：インライン（スマホ） ── */
+  .toc-inline {
+    display: none; /* デフォルト非表示、スマホで表示 */
+    background: var(--red-50);
+    border: 1px solid var(--red-100);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 20px 0;
+  }
+  .toc-inline h3 { font-size: 14px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
+  .toc-inline ol { list-style: none; padding: 0; font-size: 13px; counter-reset: toc-counter; }
+  .toc-inline li { counter-increment: toc-counter; padding: 5px 0; border-bottom: 1px solid var(--red-100); display: flex; align-items: baseline; gap: 6px; }
+  .toc-inline li:last-child { border-bottom: none; }
+  .toc-inline li::before { content: counter(toc-counter); font-size: 11px; color: var(--accent); font-weight: 700; min-width: 16px; }
+  .toc-inline a { color: var(--text); text-decoration: none; flex: 1; }
+  .toc-inline a:hover { color: var(--accent); }
+  @media (max-width: 899px) {
+    .toc-inline { display: block; }
+  }
   .sidebar-sticky { position: sticky; top: calc(var(--header-h) + 16px); }
   /* OGPカード（記事本文内） */
   .ogp-card-wrap { position: relative; display: block; margin: 12px 0; }
@@ -193,7 +226,7 @@
 <body>
 
 <header class="site-header">
-  <a href="./" class="logo">seven<span>★</span>starside</a>
+  <a href="./" class="logo">ナナボシサイド<span>★</span>ブログ</a>
   <button class="hamburger" id="hamburgerBtn" aria-label="メニューを開く">
     <span></span><span></span><span></span>
   </button>
@@ -239,7 +272,40 @@ initDrawer('articles.html');
   }
 
   // ページタイトル設定
-  document.title = `${article.title} | seven-starside-blog`;
+  document.title = `${article.title} | ナナボシサイド★ブログ`;
+
+  // OGP・metaを動的に更新（Search Console・SNSシェア対策）
+  const pageUrl = `https://seven-starside-blog.github.io/seven-starside-blog/article.html?id=${article.id}`;
+  const desc    = article.excerpt || article.title;
+  const image   = article.thumbnail || '';
+  const setMeta = (sel, attr, val) => {
+    const el = document.querySelector(sel);
+    if (el) el.setAttribute(attr, val);
+  };
+  setMeta('meta[name="description"]',           'content', desc);
+  setMeta('meta[property="og:title"]',          'content', `${article.title} | ナナボシサイド★ブログ`);
+  setMeta('meta[property="og:description"]',    'content', desc);
+  setMeta('meta[property="og:url"]',            'content', pageUrl);
+  setMeta('meta[property="og:type"]',           'content', 'article');
+  setMeta('meta[name="twitter:title"]',         'content', `${article.title} | ナナボシサイド★ブログ`);
+  setMeta('meta[name="twitter:description"]',   'content', desc);
+  setMeta('link[rel="canonical"]',              'href',    pageUrl);
+  if (image) {
+    // og:imageがなければ追加
+    if (!document.querySelector('meta[property="og:image"]')) {
+      const ogImg = document.createElement('meta');
+      ogImg.setAttribute('property', 'og:image');
+      ogImg.setAttribute('content', image);
+      document.head.appendChild(ogImg);
+      const twImg = document.createElement('meta');
+      twImg.setAttribute('name', 'twitter:image');
+      twImg.setAttribute('content', image);
+      document.head.appendChild(twImg);
+    } else {
+      setMeta('meta[property="og:image"]', 'content', image);
+      setMeta('meta[name="twitter:image"]', 'content', image);
+    }
+  }
 
   // 前後記事
   const prev = idx < articles.length - 1 ? articles[idx + 1] : null;
@@ -256,22 +322,53 @@ initDrawer('articles.html');
       .forEach(a => recommends.push(a));
   }
 
-  // 目次（h2タグから生成）
-  const tocMatches = [...(article.content.matchAll(/<h2[^>]*>(.*?)<\/h2>/gi))];
-  const tocHTML = tocMatches.length
-    ? `<div class="sidebar-card">
-        <h3>目次</h3>
-        <ul class="toc-list">
-          ${tocMatches.map((m,i) => `<li><a href="#heading-${i}">${m[1]}</a></li>`).join('')}
-        </ul>
-       </div>`
-    : '';
+  // ── 目次生成 ──────────────────────────────────────────────────
+  const h2Matches = [...(article.content.matchAll(/<h2[^>]*>(.*?)<\/h2>/gi))];
+  const hasH2 = h2Matches.length > 0;
 
   // 本文のh2にIDを付与
   let bodyHTML = article.content.replace(/<h2([^>]*)>(.*?)<\/h2>/gi, (_, attr, text, offset) => {
     const idx2 = [...(article.content.matchAll(/<h2[^>]*>(.*?)<\/h2>/gi))].findIndex(m => m.index === offset);
     return `<h2${attr} id="heading-${idx2}">${text}</h2>`;
   });
+
+  // 記事がh2始まりかどうか（先頭のブロックタグを確認）
+  const firstTagMatch = article.content.trim().match(/^<([a-z0-9]+)/i);
+  const firstTag = firstTagMatch ? firstTagMatch[1].toLowerCase() : '';
+  const startsWithH2 = firstTag === 'h2';
+
+  // PC：サイドバー目次HTML
+  const tocHTML = hasH2 ? (() => {
+    const overviewItem = startsWithH2
+      ? ''
+      : `<li class="toc-overview-item"><a href="#article-top">概要</a></li>`;
+    const items = h2Matches.map((m,i) =>
+      `<li><a href="#heading-${i}">${m[1]}</a></li>`
+    ).join('');
+    return `<div class="sidebar-card">
+      <h3>目次</h3>
+      <ul class="toc-list">
+        ${overviewItem}${items}
+      </ul>
+    </div>`;
+  })() : '';
+
+  // スマホ：インライン目次HTML（1つ目のh2の直前に挿入）
+  const inlineTocHTML = hasH2 ? (() => {
+    const items = h2Matches.map((m,i) =>
+      `<li><a href="#heading-${i}">${m[1]}</a></li>`
+    ).join('');
+    return `<div class="toc-inline">
+      <h3>目次</h3>
+      <ol>${items}</ol>
+    </div>`;
+  })() : '';
+
+  // インライン目次を1つ目のh2の直前（通常テキストがあればその後）に挿入
+  if (hasH2) {
+    // 1つ目の <h2 の位置を探して直前に挿入
+    bodyHTML = bodyHTML.replace(/(<h2[^>]* id="heading-0"[^>]*>)/, inlineTocHTML + '$1');
+  }
 
   main.innerHTML = `
     <!-- ヒーロー -->
@@ -301,7 +398,7 @@ initDrawer('articles.html');
           <!-- 広告（本文上） -->
           <div class="ad-unit article-ad">広告スペース</div>
 
-          <article class="article-body">${bodyHTML}</article>
+          <article class="article-body" id="article-top">${bodyHTML}</article>
 
           <!-- タグ -->
           <div class="article-tags-section">
